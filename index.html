@@ -103,8 +103,31 @@ input#nm{width:100%;font:600 17px var(--font-b);padding:10px 12px;border:2px sol
 [hidden]{display:none!important}
 @media (max-width:560px){#quest{font-size:13px}.pill{font-size:12px}#panel{font-size:16px;padding:14px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
-</style>
-</head><body><canvas id="c"></canvas>
+#mm{position:fixed;left:max(10px,env(safe-area-inset-left,0px));top:calc(56px + env(safe-area-inset-top,0px));width:112px;height:112px;z-index:4;cursor:pointer;filter:drop-shadow(0 3px 0 rgba(35,50,59,.9));transition:width .2s,height .2s}
+#mm.big{width:min(70vmin,380px);height:min(70vmin,380px);left:50%;top:50%;transform:translate(-50%,-50%);z-index:30}
+#mm:not(.big){transform:none}
+@media (orientation:landscape) and (max-height:520px){
+ .hud{padding-top:calc(6px + env(safe-area-inset-top,0px));gap:6px}
+ .lv .pill{padding:2px 7px;font-size:11px}.pill{padding:3px 8px;font-size:12px;border-radius:11px;box-shadow:0 2px 0 var(--ink)}
+ #quest{font-size:12px;padding:3px 8px;max-width:34ch}
+ .hbtn{height:30px;font-size:12px;padding:0 8px}#arrow,#snd{width:32px;height:32px}#arrow i{border-left-width:6px;border-right-width:6px;border-bottom-width:14px}
+ #mm{width:84px;height:84px;top:calc(40px + env(safe-area-inset-top,0px))}
+ #joy{width:104px;height:104px;bottom:calc(10px + env(safe-area-inset-bottom,0px))}#joy b{left:34px;top:34px}
+ #act{padding:10px 16px;font-size:15px;bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+ #shbtn{padding:6px 10px;font-size:12px;bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+ #toast{bottom:calc(10px + env(safe-area-inset-bottom,0px));font-size:13px;padding:5px 12px}
+ #modal{padding:6px max(10px,env(safe-area-inset-right,0px)) 6px max(10px,env(safe-area-inset-left,0px))}
+ #panel{width:min(760px,100%);padding:9px 14px;font-size:14px;line-height:1.4;border-radius:14px}
+ #panel h2{font-size:19px;margin-bottom:4px}#panel h3{font-size:16px;margin-bottom:4px}
+ #panel img{max-height:70px;width:auto}
+ .tag{font-size:11px;margin-bottom:2px}.who{font-size:13px;margin-bottom:4px}
+ .card{padding:7px 10px;margin:4px 0 6px;font-size:14px}.exp{padding:6px 10px;margin:5px 0;font-size:13.5px}
+ .opts{grid-template-columns:1fr 1fr;gap:6px;margin:5px 0}.opt{padding:6px 9px;font-size:13.5px}
+ .mc{padding:5px 9px;font-size:13px;line-height:1.3}.mgrid{gap:5px}
+ .btn{padding:6px 14px;font-size:14px}.btns{margin-top:6px}.keys{font-size:12.5px;padding:5px 9px;margin:5px 0}
+ input#nm{padding:6px 10px;font-size:15px}.slot{padding:4px 8px;margin:4px 0;min-height:32px}.stars{font-size:22px}
+}
+</style></head><body><canvas id="c"></canvas>
 <div id="glare"></div>
 <div class="hud">
   <div class="lv" id="lv"></div>
@@ -112,6 +135,7 @@ input#nm{width:100%;font:600 17px var(--font-b);padding:10px 12px;border:2px sol
   <div id="side"><div class="pill" id="wx"></div><div class="pill" id="hp"></div><div class="pill" id="score">0 แต้ม</div><button class="hbtn" id="lbbtn" hidden>อันดับ</button><div id="arrow" title="ทิศไปเป้าหมาย"><i></i></div><button class="hbtn" id="mus">เพลง</button><button class="hbtn" id="snd" aria-label="เปิดปิดเสียง">เสียง</button></div>
 </div>
 <div id="joy" hidden><b></b></div>
+<canvas id="mm" width="240" height="240" title="แตะเพื่อขยาย/ย่อแผนที่"></canvas>
 <button id="act" hidden>คุย</button>
 <button id="shbtn">เกราะกันหมา</button>
 <div id="toast"></div>
@@ -803,7 +827,8 @@ function makeDog(col){
   [[-.3,.5],[.3,.5],[-.3,-.5],[.3,-.5]].forEach(p=>legs.push(box(.18,.6,.18,col,p[0],.3,p[1],g)));
   const sh=new THREE.Mesh(new THREE.CircleGeometry(.9,12),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.22}));sh.rotation.x=-Math.PI/2;sh.position.y=.05;g.add(sh);
   g.userData={legs,tail};g.scale.setScalar(1.1);return g}
-const dogs=[[9,7,0xc58a4a],[-16,14,0x8a8a8a],[19,-12,0xe0b070],[-9,-19,0x5a3a28],[3,-8,0xf0e0c0]].map(a=>{const g=makeDog(a[2]);g.position.set(a[0],0,a[1]);scene.add(g);return {g,calm:0,tx:a[0],tz:a[1],wt:0,wl:0}});
+const dogOK=(x,z)=>!(Math.hypot(x-14,z-5)<7)&&!(Math.abs(x-26)<4.2&&Math.abs(z+5)>1.2)&&!ZONES.some(q=>Math.hypot(x-q.x,z-q.z)<12||Math.hypot(x-q.x,z-q.z+13)<8);
+const dogs=[[9,7,0xc58a4a],[-16,14,0x8a8a8a],[19,-12,0xe0b070],[-9,-19,0x5a3a28],[3,-8,0xf0e0c0],[-8,-3,0x9a6b3a],[-20,-14,0xd9c7a0],[2,-17,0x6b6b6b],[22,-15,0xb5651d],[-30,9,0xf2e6d0],[12,22,0x4a3a30],[34,10,0xc9a063],[-22,-22,0xe8b878]].filter((a,i)=>i<5||dogOK(a[0],a[1])).map(a=>{const g=makeDog(a[2]);g.position.set(a[0],0,a[1]);scene.add(g);return {g,calm:0,tx:a[0],tz:a[1],wt:0,wl:0}});
 function bite(d){
   const p=player.position,dx=p.x-d.g.position.x,dz=p.z-d.g.position.z,L=Math.hypot(dx,dz)||1;
   S.hp--;S.invuln=4;d.calm=6;p.x+=dx/L*3;p.z+=dz/L*3;sfx.bark();sfx.bad();updateHud();toast("น้องหมางับ! พลังใจ -1");
@@ -896,8 +921,32 @@ function frame(now){
   else if(S.progress<LEVELS.length&&!S.busy){tx=ZONES[S.progress].x;tz=ZONES[S.progress].z}
   const ar=$("arrow");if(tx===null)ar.style.opacity=.25;else{ar.style.opacity=1;ar.firstElementChild.style.transform=`rotate(${Math.atan2(tx-p.x,-(tz-p.z))}rad)`}
   atmosUpdate(dt,p);
+  mmT-=dt;if(mmT<=0){mmT=.12;mmC.style.display=!modal.hidden?"none":"";{const sb=$("shbtn");if(sb)sb.style.display=!modal.hidden?"none":""}if(mmC.style.display==="")mmDraw()}
   renderer.render(scene,camera);requestAnimationFrame(frame)}
-function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w<h?62:48;camera.updateProjectionMatrix()}
+
+/* ---- แผนที่ย่อ ---- */
+const mmC=$("mm"),mmX=mmC.getContext("2d");let mmBig=false,mmT=0;
+mmC.onclick=()=>{mmBig=!mmBig;mmC.classList.toggle("big",mmBig);mmT=0};
+function mmDraw(){
+  const W=240,R=64,k=W/(2*R),X=x=>(x+R)*k,Z=z=>(z+R)*k,p=player.position,c=mmX;
+  c.clearRect(0,0,W,W);c.save();c.beginPath();c.arc(W/2,W/2,W/2-3,0,7);c.clip();
+  c.fillStyle="#cfe8a8";c.fillRect(0,0,W,W);
+  c.fillStyle="#7fc4e6";c.fillRect(X(RIVER.x-RIVER.w/2),0,RIVER.w*k,W);
+  c.fillStyle="#c9a86a";c.fillRect(X(RIVER.x-RIVER.w/2)-2,Z(RIVER.bz-1.6),RIVER.w*k+4,3.2*k);
+  c.fillStyle="#7fc4e6";c.beginPath();c.arc(X(POND.x),Z(POND.z),POND.r*k,0,7);c.fill();
+  c.strokeStyle="#e7d3a1";c.lineWidth=7;c.lineCap="round";c.beginPath();
+  c.moveTo(X(0),Z(0));ZONES.forEach((q,i)=>{c.moveTo(X(0),Z(0));c.lineTo(X(q.x),Z(q.z))});c.stroke();
+  c.fillStyle="#f3d27a";c.beginPath();c.arc(X(0),Z(0),5*k/1.4,0,7);c.fill();
+  c.font="700 22px Kanit,sans-serif";c.textAlign="center";c.textBaseline="middle";
+  ZONES.forEach((q,i)=>{const done=i<S.progress,on=i===S.progress&&!S.inLevel;
+    c.beginPath();c.arc(X(q.x),Z(q.z),on?19+3*Math.sin(tt*5):15,0,7);c.fillStyle=done?"#7fcf93":on?"#ffcf3a":"#b9b9b9";c.fill();c.lineWidth=3;c.strokeStyle="#23323b";c.stroke();
+    c.fillStyle="#23323b";c.fillText(done?"✓":i+1,X(q.x),Z(q.z)+1)});
+  dogs.forEach(d=>{const dx=d.g.position.x-p.x,dz=d.g.position.z-p.z;if(Math.hypot(dx,dz)<34){c.beginPath();c.arc(X(d.g.position.x),Z(d.g.position.z),6,0,7);c.fillStyle=d.calm>0?"#9a9a9a":"#e0584a";c.fill();c.lineWidth=2;c.strokeStyle="#fff";c.stroke()}});
+  if(S.collecting&&S.collecting.meshes)S.collecting.meshes.forEach(m=>{c.beginPath();c.arc(X(m.position.x),Z(m.position.z),5,0,7);c.fillStyle="#ffcf3a";c.fill();c.lineWidth=2;c.strokeStyle="#23323b";c.stroke()});
+  if(S.shT>0){c.beginPath();c.arc(X(p.x),Z(p.z),16,0,7);c.strokeStyle="#4cc3ff";c.lineWidth=3;c.stroke()}
+  c.translate(X(p.x),Z(p.z));c.rotate(Math.PI-player.rotation.y);c.beginPath();c.moveTo(0,-13);c.lineTo(9,10);c.lineTo(0,5);c.lineTo(-9,10);c.closePath();c.fillStyle="#ff5c7a";c.fill();c.lineWidth=3;c.strokeStyle="#23323b";c.stroke();
+  c.restore();c.beginPath();c.arc(W/2,W/2,W/2-3,0,7);c.lineWidth=5;c.strokeStyle="#23323b";c.stroke()}
+function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w<h?62:(h<520?58:48);camera.updateProjectionMatrix()}
 addEventListener("resize",resize);resize();
 
 /* ---- กระดานคะแนนกลาง (ทำงานเมื่อเปิดจากลิงก์ที่เผยแพร่และมีสิทธิ์เขียนข้อมูล) ---- */
