@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>แผนที่เส้นทาง · การพยาบาลชุมชน 2</title>
+<style>
+:root{--bg:#eaf4e2;--surface:#fffaf0;--soft:#f3ead3;--ink:#23323b;--muted:#5b6b73;--leaf:#3f9b5a;--leaf2:#8cc87f;--sun:#f6b73c;--rose:#d9483d;--sea:#2d8fb8;--line:#23323b;--path:#c9b98f;--ground:#d6ecc4;--roof:#d9483d;--fd:'Kanit','Prompt',sans-serif;--fb:'Prompt','Tahoma',sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16211c;--surface:#1f2e27;--soft:#2a3b33;--ink:#eef3ea;--muted:#a9b9b0;--leaf:#6cc487;--leaf2:#3f7a52;--sun:#f3bd55;--rose:#ef7a6f;--sea:#6bb8dc;--line:#eef3ea;--path:#6f8577;--ground:#22362b;--roof:#ef7a6f;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--fb);font-size:16px;line-height:1.6;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:560px;margin:0 auto;display:grid;gap:18px}
+h1,h2,h3{font-family:var(--fd);font-weight:600;line-height:1.25;margin:0;text-wrap:balance}
+h1{font-size:clamp(26px,6vw,34px)}h2{font-size:20px}h3{font-size:18px}
+p{margin:0}.tag{font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--sea)}
+.note{font-size:14.5px;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{display:inline-block;font:600 15px var(--fb);color:#23323b;background:var(--sun);border:2.5px solid var(--line);border-radius:14px;padding:8px 16px;text-decoration:none;cursor:pointer;box-shadow:0 3px 0 var(--line)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}.btn.alt{background:var(--surface);color:var(--ink)}
+input[type=text],input[inputmode]{font:500 16px var(--fb);padding:9px 12px;border:2px solid var(--line);border-radius:12px;background:#fff;color:#23323b;min-width:0;flex:1 1 160px}
+.card{background:var(--surface);border:2.5px solid var(--line);border-radius:20px;box-shadow:0 5px 0 var(--line);padding:16px;display:grid;gap:10px}
+.msg{font-size:14px;font-weight:600}.msg.err{color:var(--rose)}
+.mapbox{background:var(--ground);border:2.5px solid var(--line);border-radius:22px;box-shadow:0 5px 0 var(--line);padding:6px;overflow:hidden}
+svg{display:block;width:100%;height:auto}
+.node{cursor:pointer}.node:focus{outline:none}.node:focus-visible .ring{stroke:var(--sea);stroke-width:5}
+.lbl{font-family:var(--fb);font-size:13px;font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--ground);stroke-width:4px;stroke-linejoin:round}
+.lbl2{font-family:var(--fb);font-size:10.5px;font-weight:500;fill:var(--muted);paint-order:stroke;stroke:var(--ground);stroke-width:4px;stroke-linejoin:round}
+.num{font-family:var(--fd);font-size:15px;font-weight:600;text-anchor:middle}
+.you{font-family:var(--fd);font-size:11px;font-weight:600;fill:#fff;text-anchor:middle}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted);padding:2px 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid var(--line);vertical-align:-1px;margin-right:5px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{font-size:12.5px;font-weight:600;border:2px solid var(--line);border-radius:999px;padding:0 10px;background:var(--soft)}
+.chip.live{background:var(--sun);color:#23323b}.chip.done{background:var(--leaf);color:#fff;border-color:var(--leaf)}.chip.lock{border-style:dashed;background:transparent;color:var(--muted)}.chip.team{background:var(--sea);color:#fff;border-color:var(--sea)}
+table{width:100%;border-collapse:collapse;font-size:14.5px}td{padding:5px 4px;border-bottom:1.5px dashed var(--path)}td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.bar{height:10px;border:2px solid var(--line);border-radius:8px;background:var(--soft);overflow:hidden}.bar i{display:block;height:100%;background:var(--leaf)}
+:focus-visible{outline:3px solid var(--sea);outline-offset:2px}[hidden]{display:none!important}
+@media (prefers-reduced-motion:no-preference){.pulse{animation:pl 1.8s ease-out infinite;transform-box:fill-box;transform-origin:center}@keyframes pl{from{transform:scale(1);opacity:.7}to{transform:scale(1.9);opacity:0}}}
+.slot{border:2.5px solid var(--line);border-radius:18px;background:var(--surface);box-shadow:0 4px 0 var(--line);padding:12px;display:grid;gap:8px}
+.slot h3{font-size:16px;display:flex;justify-content:space-between;gap:8px}
+.f{display:grid;gap:4px}.f>span{font-size:12.5px;font-weight:600;color:var(--muted)}
+.fld{min-height:44px;border:2.5px dashed var(--path);border-radius:12px;padding:6px 8px;background:transparent;color:var(--ink);font:500 14.5px var(--fb);text-align:left;width:100%;cursor:pointer;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.fld.on{border-style:solid;border-color:var(--sea);box-shadow:0 0 0 3px color-mix(in srgb,var(--sea) 30%,transparent)}
+.fld .ph{color:var(--muted);font-size:14px}
+.chipx{display:inline-flex;gap:6px;align-items:flex-start;border:2px solid var(--line);border-radius:10px;padding:2px 8px;font-size:13.5px;line-height:1.4;color:#23323b}
+.chipx b{cursor:pointer;font-weight:700;padding:0 2px}
+.t-pop{background:#cfe8ff}.t-prob{background:#ffd9d4}.t-cause{background:#fff0b8}.t-ev{background:#d7f0d0}
+.pool{display:grid;gap:8px}
+.pc{font:500 14.5px/1.45 var(--fb);text-align:left;border:2.5px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer;color:#23323b;box-shadow:0 3px 0 var(--line)}
+.pc:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.pc.used{opacity:.45;box-shadow:none}
+.ok{color:var(--leaf);font-weight:700}.bad{color:var(--rose);font-weight:700}
+.stars{font-size:26px;letter-spacing:4px}
+.sticky{position:sticky;bottom:0;background:var(--bg);padding:10px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;z-index:5}
+
+.qc{display:grid;gap:10px}.qn{font:600 13px var(--fb);color:var(--sea)}
+.qt{font-size:16px;line-height:1.6}
+.opt{display:flex;gap:10px;align-items:flex-start;border:2.5px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--soft);cursor:pointer;font-size:15px}
+.opt input{margin-top:5px;width:18px;height:18px;flex:none;accent-color:var(--leaf)}
+.opt:has(input:checked){background:var(--sun);color:#23323b}
+select{font:500 15px var(--fb);padding:8px 10px;border:2px solid var(--line);border-radius:10px;background:#fff;color:#23323b;max-width:100%}
+.mrow{display:grid;gap:4px;padding:8px 0;border-bottom:1.5px dashed var(--path)}
+.fb{font-size:14px;padding:8px 10px;border-radius:10px;border:2px solid var(--line)}
+.fb.g{background:color-mix(in srgb,var(--leaf) 22%,var(--surface))}.fb.r{background:color-mix(in srgb,var(--rose) 18%,var(--surface))}
+.stars{font-size:26px;letter-spacing:4px}
+.sticky{position:sticky;bottom:0;background:var(--bg);padding:10px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;z-index:5}
+.ok{color:var(--leaf);font-weight:700}.bad{color:var(--rose);font-weight:700}
+</style></head><body><div class="wrap">
+<header style="display:grid;gap:8px">
+  <div class="tag" id="tag">บทที่ 4 ประเมินผล · ภารกิจเดี่ยว</div>
+  <h1 id="ttl">แบบฝึก</h1>
+  <p class="note" id="intro"></p>
+  <div class="row"><a class="btn alt" href="map.html">◀ กลับแผนที่</a></div>
+</header>
+<section class="card" id="login" hidden>
+  <form class="row" id="lf"><label class="note" for="sid">รหัสนิสิต</label><input id="sid" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="เช่น 66010xxx"><button class="btn" type="submit">เริ่มภารกิจ</button></form>
+  <div class="msg err" id="lmsg" hidden></div>
+</section>
+<section class="card" id="closed" hidden><h2>ภารกิจนี้ยังไม่เปิด</h2><p class="note">รอครูเปิดบทที่ 4 ในชั่วโมงเรียน แล้วกลับมาใหม่</p></section>
+<section class="card" id="bad" hidden><h2>ไม่พบภารกิจ</h2><p class="note">ลิงก์ไม่ถูกต้อง กลับไปเริ่มจากแผนที่</p></section>
+<main id="game" hidden style="display:grid;gap:14px">
+  <div id="qs" style="display:grid;gap:14px"></div>
+  <div class="sticky"><button class="btn" id="submit" type="button">ส่งคำตอบ</button><span class="msg" id="smsg" role="status"></span></div>
+  <section class="card" id="res" hidden></section>
+</main>
+</div>
+<script>
+"use strict";
+const SHEET_URL="https://script.google.com/macros/s/AKfycbx6PC4sfC9m2FEYOionsVGpvt1dclejuPBhh8SOtYy5YIbsthC41O-lohVUwIMjYwGA6g/exec";
+const $=id=>document.getElementById(id);
+const QZ={"ch4-type": {"title": "แยกประเภทการประเมินผล", "intro": "อ่านสถานการณ์แล้วตอบ มี 4 ประเภท คือ ความก้าวหน้า ประสิทธิภาพ ประสิทธิผล และผลกระทบ", "qs": [{"id": "t1", "t": "mc", "q": "โครงการ “รณรงค์ให้ประชาชนสวมหน้ากากอนามัย เพื่อป้องกันการระบาดของโรคโคโรน่าไวรัส” พบว่าอัตราการเกิดโรคระบบทางเดินหายใจ เช่น ไข้หวัดใหญ่ หอบหืดจากฝุ่น PM 2.5 ลดลงด้วย เป็นการประเมินผลชนิดใด", "opts": [["pg", "การประเมินความก้าวหน้า"], ["ef", "การประเมินประสิทธิภาพ"], ["ev", "การประเมินประสิทธิผล"], ["im", "การประเมินผลกระทบ"]]}, {"id": "t2", "t": "mc", "q": "โครงการอบรม อสม. ใช้งบ 50,000 บาท มีผู้ผ่านการอบรม 100 คน คิดเป็นต้นทุน 500 บาทต่อคน ต่ำกว่าโครงการเดิมที่ 800 บาทต่อคน เป็นการประเมินผลชนิดใด", "opts": [["pg", "การประเมินความก้าวหน้า"], ["ef", "การประเมินประสิทธิภาพ"], ["ev", "การประเมินประสิทธิผล"], ["im", "การประเมินผลกระทบ"]]}, {"id": "t3", "t": "mc", "q": "เดือนที่ 2 ของโครงการ ทีมตรวจสอบว่ากิจกรรมตามตาราง Gantt chart ทำไปแล้วกี่ขั้นตอน และมีขั้นตอนใดล่าช้า เป็นการประเมินผลชนิดใด", "opts": [["pg", "การประเมินความก้าวหน้า"], ["ef", "การประเมินประสิทธิภาพ"], ["ev", "การประเมินประสิทธิผล"], ["im", "การประเมินผลกระทบ"]]}, {"id": "t4", "t": "mc", "q": "โครงการตั้งเป้าให้ครัวเรือนที่พบลูกน้ำยุงลายเหลือไม่เกินร้อยละ 10 หลังโครงการพบร้อยละ 8 การเทียบผลที่ได้กับเป้าหมายนี้เป็นการประเมินผลชนิดใด", "opts": [["pg", "การประเมินความก้าวหน้า"], ["ef", "การประเมินประสิทธิภาพ"], ["ev", "การประเมินประสิทธิผล"], ["im", "การประเมินผลกระทบ"]]}, {"id": "t5", "t": "mc", "q": "สองปีหลังโครงการเลิกบุหรี่ในชุมชน พบว่าค่ารักษาโรคระบบทางเดินหายใจของชุมชนลดลง และครอบครัวมีรายจ่ายลดลง ซึ่งไม่ได้ตั้งเป็นวัตถุประสงค์ไว้ เป็นการประเมินผลชนิดใด", "opts": [["pg", "การประเมินความก้าวหน้า"], ["ef", "การประเมินประสิทธิภาพ"], ["ev", "การประเมินประสิทธิผล"], ["im", "การประเมินผลกระทบ"]]}, {"id": "t6", "t": "mc", "q": "เปรียบเทียบจำนวนครัวเรือนที่เยี่ยมได้ต่อชั่วโมงการทำงานของพยาบาล 2 ทีม ว่าทีมใดใช้เวลาและแรงงานน้อยกว่าสำหรับงานเท่ากัน เป็นการประเมินผลชนิดใด", "opts": [["pg", "การประเมินความก้าวหน้า"], ["ef", "การประเมินประสิทธิภาพ"], ["ev", "การประเมินประสิทธิผล"], ["im", "การประเมินผลกระทบ"]]}, {"id": "t7", "t": "mc", "q": "ระหว่างดำเนินโครงการ ตรวจสอบทุกสัปดาห์ว่ากลุ่มเป้าหมายมาร่วมกิจกรรมครบตามแผนหรือไม่ เพื่อปรับแผนได้ทันที เป็นการประเมินผลชนิดใด", "opts": [["pg", "การประเมินความก้าวหน้า"], ["ef", "การประเมินประสิทธิภาพ"], ["ev", "การประเมินประสิทธิผล"], ["im", "การประเมินผลกระทบ"]]}, {"id": "t8", "t": "mc", "q": "เป้าหมายผู้สูงอายุออกกำลังกายสม่ำเสมอร้อยละ 70 หลังโครงการทำได้ร้อยละ 60 เมื่อนำมาเทียบกับเป้าหมาย เป็นการประเมินผลชนิดใด", "opts": [["pg", "การประเมินความก้าวหน้า"], ["ef", "การประเมินประสิทธิภาพ"], ["ev", "การประเมินประสิทธิผล"], ["im", "การประเมินผลกระทบ"]]}, {"id": "t9", "t": "match", "q": "จับคู่คำสำคัญกับประเภทการประเมินผล", "opts": [["pg", "การประเมินความก้าวหน้า"], ["ef", "การประเมินประสิทธิภาพ"], ["ev", "การประเมินประสิทธิผล"], ["im", "การประเมินผลกระทบ"]], "items": [["k1", "คุ้มค่า ต้นทุนต่อหน่วย ใช้ทรัพยากรน้อย"], ["k2", "บรรลุเป้าหมายหรือวัตถุประสงค์มากน้อยเพียงใด"], ["k3", "ผลระยะยาวหรือผลข้างเคียงนอกเหนือวัตถุประสงค์"], ["k4", "เป็นไปตามแผนระหว่างดำเนินงานหรือไม่"]]}, {"id": "t10", "t": "tf", "q": "ข้อความต่อไปนี้ถูกหรือผิด", "items": [["f1", "ค่าประสิทธิผลที่มากกว่า 100 หมายถึงผลที่ได้เกินเป้าหมาย"], ["f2", "การประเมินประสิทธิภาพพิจารณาเฉพาะว่าบรรลุเป้าหมายหรือไม่ โดยไม่ต้องดูทรัพยากรที่ใช้"], ["f3", "ผลกระทบของโครงการอาจเป็นผลที่ไม่ได้ตั้งใจให้เกิดก็ได้"], ["f4", "การประเมินความก้าวหน้าทำได้เฉพาะหลังโครงการสิ้นสุดแล้วเท่านั้น"]]}, {"id": "t11", "t": "multi", "q": "ข้อใดเป็นข้อมูลที่ใช้ประเมินประสิทธิภาพของโครงการ (เลือกได้มากกว่า 1 ข้อ)", "opts": [["b", "งบประมาณที่ใช้"], ["t", "ระยะเวลาที่ใช้"], ["p", "จำนวนบุคลากรที่ใช้"], ["r", "ร้อยละการบรรลุเป้าหมาย"]]}]}, "ch4-calc": {"title": "คำนวณค่าประสิทธิผล", "intro": "ค่าประสิทธิผล = (ผลที่ทำได้จริง ÷ เป้าหมาย) × 100 (ตอบเป็นตัวเลข ทศนิยมได้ ไม่ต้องใส่เครื่องหมาย %)", "qs": [{"id": "c1", "t": "mc", "q": "โครงการคัดกรองโรคตั้งเป้าหมายการคัดกรองไว้ที่ร้อยละ 50 หลังดำเนินการ พบว่ากลุ่มเป้าหมายจำนวน 150 คน มารับการคัดกรอง 105 คน โครงการนี้มีค่าประสิทธิผลของโครงการเท่าไร", "opts": [["a", "45"], ["b", "50"], ["c", "66"], ["d", "140"]]}, {"id": "c2", "t": "num", "q": "ชุมชนมี 200 ครัวเรือน ตั้งเป้าให้มีถังขยะถูกสุขลักษณะร้อยละ 80 หลังโครงการมี 140 ครัวเรือน ค่าประสิทธิผลเท่าไร", "unit": ""}, {"id": "c3", "t": "num", "q": "ผู้สูงอายุ 120 คน ตั้งเป้าเข้าร่วมกิจกรรมออกกำลังกายร้อยละ 75 หลังโครงการเข้าร่วมจริง 72 คน ค่าประสิทธิผลเท่าไร", "unit": ""}, {"id": "c4", "t": "num", "q": "ประชาชน 400 คน ตั้งเป้าตรวจคัดกรองเบาหวานร้อยละ 90 ตรวจได้จริง 342 คน ค่าประสิทธิผลเท่าไร", "unit": ""}, {"id": "c5", "t": "num", "q": "ชุมชนมี 250 ครัวเรือน ตั้งเป้าคัดแยกขยะร้อยละ 60 หลังโครงการคัดแยกขยะ 150 ครัวเรือน ค่าประสิทธิผลเท่าไร", "unit": ""}, {"id": "c6", "t": "num", "q": "ตั้งเป้าให้ อสม. เข้าร่วมประชุมร้อยละ 80 ของ 50 คน มาจริง 30 คน ค่าประสิทธิผลเท่าไร", "unit": ""}, {"id": "c7", "t": "num", "q": "(ประสิทธิภาพเบื้องต้น) โครงการใช้งบ 60,000 บาท มีผู้เข้าร่วม 120 คน คิดเป็นต้นทุนต่อคนกี่บาท", "unit": ""}, {"id": "c8", "t": "mc", "q": "ค่าประสิทธิผลของโครงการหนึ่งเท่ากับ 87.5 หมายความว่าอย่างไร", "opts": [["a", "ผลที่ได้เกินเป้าหมาย"], ["b", "ผลที่ทำได้คิดเป็นร้อยละ 87.5 ของเป้าหมาย ยังไม่ถึงเป้า"], ["c", "โครงการใช้ทรัพยากรคุ้มค่าร้อยละ 87.5"], ["d", "กลุ่มเป้าหมายเข้าร่วมร้อยละ 87.5 ของทั้งหมด"]]}]}};
+const MID=new URLSearchParams(location.search).get("m"),M=QZ[MID];
+let sid="",A={},R=null;
+function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function shuf(arr,seed){const b=arr.slice();let s=0;for(const ch of String(seed))s=(s*31+ch.charCodeAt(0))%233280;s=s||7;
+  for(let i=b.length-1;i>0;i--){s=(s*9301+49297)%233280;const j=s%(i+1);[b[i],b[j]]=[b[j],b[i]]}return b}
+function radio(name,o,checked,on){const l=el("label","opt"),i=document.createElement("input");i.type="radio";i.name=name;i.checked=checked;i.onchange=on;l.appendChild(i);l.appendChild(el("span",null,o));return l}
+function draw(){
+  const box=$("qs");box.innerHTML="";
+  M.qs.forEach((q,n)=>{
+    const c=el("section","card qc"),r=R&&R.qs[q.id];
+    const hd=el("div","qn","ข้อ "+(n+1)+" จาก "+M.qs.length);
+    if(r){const m=el("span",r.ok?"ok":"bad",r.ok?"  ✓ ถูก":r.s>0?"  ✓ ถูกบางส่วน "+Math.round(r.s*100)+"%":"  ✗ ยังไม่ถูก");hd.appendChild(m)}
+    c.appendChild(hd);c.appendChild(el("div","qt",q.q));
+    if(q.t==="mc"){shuf(q.opts,sid+q.id).forEach(o=>c.appendChild(radio(q.id,o[1],A[q.id]===o[0],()=>{A[q.id]=o[0];clr()})))}
+    else if(q.t==="multi"){const cur=A[q.id]||[];shuf(q.opts,sid+q.id).forEach(o=>{const l=el("label","opt"),i=document.createElement("input");i.type="checkbox";i.checked=cur.includes(o[0]);
+      i.onchange=()=>{const s=new Set(A[q.id]||[]);i.checked?s.add(o[0]):s.delete(o[0]);A[q.id]=[...s];clr()};l.appendChild(i);l.appendChild(el("span",null,o[1]));c.appendChild(l)})}
+    else if(q.t==="num"){const i=document.createElement("input");i.type="text";i.setAttribute("inputmode","decimal");i.setAttribute("aria-label","คำตอบข้อ "+(n+1));i.placeholder="พิมพ์ตัวเลข";i.value=A[q.id]||"";i.oninput=()=>{A[q.id]=i.value;clr()};c.appendChild(i)}
+    else if(q.t==="match"){const a=A[q.id]=A[q.id]||{};q.items.forEach(it=>{const row=el("div","mrow");row.appendChild(el("span",null,it[1]));
+      const s=document.createElement("select");s.setAttribute("aria-label",it[1]);const p=el("option",null,"— เลือกประเภท —");p.value="";s.appendChild(p);
+      q.opts.forEach(o=>{const op=el("option",null,o[1]);op.value=o[0];if(a[it[0]]===o[0])op.selected=true;s.appendChild(op)});
+      s.onchange=()=>{a[it[0]]=s.value;clr()};row.appendChild(s);
+      if(r&&r.items)row.appendChild(el("span",r.items[it[0]]?"ok":"bad",r.items[it[0]]?"✓":"✗"));c.appendChild(row)})}
+    else if(q.t==="tf"){const a=A[q.id]=A[q.id]||{};q.items.forEach(it=>{const row=el("div","mrow");row.appendChild(el("span",null,it[1]));
+      const w=el("div","row");[["true","ถูก"],["false","ผิด"]].forEach(o=>w.appendChild(radio(q.id+it[0],o[1],String(a[it[0]])===o[0],()=>{a[it[0]]=o[0]==="true";clr()})));row.appendChild(w);
+      if(r&&r.items)row.appendChild(el("span",r.items[it[0]]?"ok":"bad",r.items[it[0]]?"✓":"✗"));c.appendChild(row)})}
+    if(r&&r.note)c.appendChild(el("div","fb "+(r.ok?"g":"r"),(r.ok?"เฉลย: ":"ใบ้: ")+r.note));
+    box.appendChild(c)})}
+function clr(){} // ไม่ล้างผลตอนแก้ เพื่อให้เห็นว่าข้อไหนต้องแก้
+function stars(n){return"★".repeat(n)+"☆".repeat(3-n)}
+function showRes(j){
+  R=j.result;const r=$("res");r.hidden=false;r.innerHTML="";
+  r.appendChild(el("h2",null,`ได้ ${R.score} จาก ${R.n} ข้อ (${R.pct}%)`));
+  r.appendChild(el("div","stars",stars(R.stars)));
+  r.appendChild(el("p","note",`ดาวที่ดีที่สุดของคุณ ${j.best}/3 · ส่งแล้ว ${j.attempts} ครั้ง`));
+  r.appendChild(el("p","note",R.stars>=3?"เยี่ยมมาก กลับไปดูแผนที่ได้เลย":"ดูข้อที่ยังไม่ถูก อ่านใบ้ แก้แล้วส่งใหม่ได้ ดาวที่ดีที่สุดจะถูกเก็บไว้"));
+  draw();r.scrollIntoView({block:"nearest",behavior:"smooth"})}
+async function api(body){const r=await fetch(SHEET_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});return r.json()}
+$("submit").onclick=async()=>{
+  const m=$("smsg");m.className="msg";m.textContent="";$("submit").disabled=true;m.textContent="กำลังตรวจ...";
+  try{const j=await api({action:"mission",sid,mission:MID,ans:A});if(!j.ok)throw new Error(j.error||"fail");m.textContent="";showRes(j)}
+  catch(e){m.className="msg err";m.textContent=e.message==="closed"?"ครูยังไม่เปิดบทนี้":e.message==="not_in_roster"?"ไม่พบรหัสนิสิตในรายชื่อ":"ส่งไม่สำเร็จ ลองใหม่อีกครั้ง"}
+  $("submit").disabled=false};
+function begin(){$("login").hidden=true;$("game").hidden=false;draw()}
+async function enter(id){sid=id;let open={};try{const r=await fetch(SHEET_URL,{redirect:"follow"}),j=await r.json();open=(j&&j.open)||{}}catch(e){}
+  if(!open[4]){$("login").hidden=true;$("closed").hidden=false;return}begin()}
+$("lf").onsubmit=async e=>{e.preventDefault();const v=($("sid").value||"").replace(/[^0-9A-Za-z]/g,""),m=$("lmsg");m.hidden=true;
+  if(v.length<5){m.textContent="กรุณากรอกรหัสนิสิต";m.hidden=false;return}
+  try{const j=await api({action:"login",sid:v});if(!j.ok)throw new Error(j.error||"fail");try{sessionStorage.setItem("cn-sid",v)}catch(x){}enter(v)}
+  catch(x){m.textContent=x.message==="not_in_roster"?"ไม่พบรหัสนิสิตนี้ในรายชื่อรายวิชา":"เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง";m.hidden=false}};
+if(!M){$("login").hidden=true;$("bad").hidden=false;$("game").hidden=true}
+else{$("ttl").textContent=M.title;$("intro").textContent=M.intro;document.title=M.title+" · การพยาบาลชุมชน 2";
+  let s0="";try{s0=sessionStorage.getItem("cn-sid")||""}catch(e){}
+  if(s0)enter(s0);else $("login").hidden=false}
+</script></body></html>
