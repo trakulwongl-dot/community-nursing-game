@@ -60,6 +60,13 @@ tr.no td{color:var(--muted);background:#fbf6ea}
   </section>
 
   <section class="card">
+    <h2>เก็บข้อมูลครัวเรือน (บทที่ 2)</h2>
+    <div class="note">โควตา 3 หลังต่อสมาชิก นับรวมทั้งกลุ่ม ครบโควตาได้ถือว่าทำภารกิจนี้ผ่าน เกินโควตาได้โบนัส +1 คะแนนมีส่วนร่วมต่อคน (รวมแล้วไม่เกิน 5) กรอกจำนวนหลังที่กลุ่มเก็บได้แล้วกดบันทึก</div>
+    <div id="hhbox" style="display:grid;gap:6px"></div>
+    <div class="row"><button class="btn" id="saveHH">บันทึกจำนวนหลัง</button><span class="msg" id="hmsg"></span></div>
+  </section>
+
+  <section class="card">
     <div class="row" style="justify-content:space-between"><h2>ภาพรวม</h2><button class="btn alt" id="refresh">รีเฟรช</button></div>
     <div class="stats" id="stats"></div>
     <div class="gs" id="gs"></div>
@@ -103,7 +110,11 @@ async function load(){
   CHN.forEach((_,i)=>{const s=$("sw"+(i+1));if(s)s.checked=!!j.open[i+1]});
   render()}
 function buildChs(){$("chs").innerHTML=CHN.map((n,i)=>`<label class="ch"><span>${esc(n)}</span><input type="checkbox" class="sw" id="sw${i+1}" aria-label="${esc(n)}"></label>`).join("")}
-function render(){
+function renderHH(){
+  const g=DATA.hhGroups||{};
+  $("hhbox").innerHTML=Object.keys(g).sort((x,y)=>String(x).localeCompare(String(y),"th",{numeric:true})).map(k=>{const s=g[k];
+    return `<div class="row" style="justify-content:space-between"><span>กลุ่ม ${esc(k)} · ${s.members} คน · โควตา ${s.quota}</span><span class="row"><input type="number" min="0" inputmode="numeric" class="hhin" data-g="${esc(k)}" value="${s.count||""}" style="max-width:90px;flex:0 0 90px" aria-label="จำนวนหลังกลุ่ม ${esc(k)}"><b class="${s.bonus?"ok":s.met?"ok":""}">${s.bonus?"เกินโควตา +1":s.met?"ครบโควตา":"ยังไม่ครบ"}</b></span></div>`}).join("")}
+function render(){renderHH();
   const rows=DATA.rows,tot=rows.length,st={no:0,go:0,done:0};rows.forEach(r=>st[statusOf(r)]++);
   const avg=tot?Math.round(rows.reduce((a,r)=>a+r.score,0)/tot):0;
   $("stats").innerHTML=[[tot,"นิสิตในรายชื่อ"],[st.go+st.done,"เริ่มเล่นแล้ว"],[st.no,"ยังไม่เริ่ม"],[st.done,"ผ่านครบ 4 ด่าน"],[avg,"แต้มเฉลี่ย"]].map(x=>`<div class="st"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
@@ -112,24 +123,27 @@ function render(){
   const fg=$("fg"),cur=fg.value;fg.innerHTML='<option value="">ทุกกลุ่ม</option>'+Object.keys(gm).sort().map(g=>`<option value="${esc(g)}">กลุ่ม ${esc(g)}</option>`).join("");fg.value=cur;
   table();
   $("foot").textContent=`ข้อมูลล่าสุดเมื่อ ${new Date().toLocaleTimeString("th-TH")} · แถวทดสอบที่ไม่มีรหัสนิสิต ${DATA.nosid} แถว · ผู้เล่นที่รหัสไม่อยู่ในรายชื่อ ${DATA.extra} คน`}
-const COLS=[["group","กลุ่ม"],["sid","รหัสนิสิต"],["name","ชื่อ-สกุล"],["nick","ชื่อเล่น"],["score","แต้ม",1],["st","ดาว",1],["lv","ด่าน",1],["pt","ส่วนร่วม บท1 /1",1],["t","เล่นล่าสุด"],["state","สถานะ"]];
-const pt1=r=>Math.min(1,(r.lv||0)/4);
-function val(r,k){return k==="pt"?pt1(r):k==="st"?stars(r):k==="state"?statusOf(r):r[k]}
+const COLS=[["group","กลุ่ม"],["sid","รหัสนิสิต"],["name","ชื่อ-สกุล"],["nick","ชื่อเล่น"],["score","แต้ม",1],["st","ดาว",1],["lv","ด่าน",1],["d2","จัดเรียงวินิจฉัย ★",1],["pt","ส่วนร่วม /5 (รวมโบนัส)",1],["t","เล่นล่าสุด"],["state","สถานะ"]];
+const d2=r=>(r.m&&r.m["ch2-diag"])?r.m["ch2-diag"].best:-1;
+const CHM={2:5,4:2},cnt=(r,c)=>Object.keys(r.m||{}).filter(k=>k.indexOf("ch"+c+"-")===0).length;
+const pt1=r=>Math.min(5,Math.min(1,(r.lv||0)/4)+Math.min(1,(cnt(r,2)+((r.hh&&r.hh.met)?1:0))/CHM[2])+Math.min(1,cnt(r,4)/CHM[4])+((r.hh&&r.hh.bonus)||0));
+function val(r,k){return k==="pt"?pt1(r):k==="d2"?d2(r):k==="st"?stars(r):k==="state"?statusOf(r):r[k]}
 function table(){
   $("th").innerHTML=COLS.map(c=>`<th data-k="${c[0]}" class="${c[2]?"n":""}">${c[1]}${sortK===c[0]?(sortD>0?" ▲":" ▼"):""}</th>`).join("");
   const q=$("q").value.trim().toLowerCase(),g=$("fg").value,s=$("fs").value;
   let rows=DATA.rows.filter(r=>(!g||String(r.group)===g)&&(!s||statusOf(r)===s)&&(!q||[r.name,r.sid,r.nick].join(" ").toLowerCase().includes(q)));
   rows.sort((a,b)=>{const x=val(a,sortK),y=val(b,sortK);return (typeof x==="number"&&typeof y==="number"?x-y:String(x).localeCompare(String(y),"th",{numeric:true}))*sortD||String(a.sid).localeCompare(String(b.sid))});
   $("tb").innerHTML=rows.map(r=>{const s=statusOf(r),lab={no:"ยังไม่เริ่ม",go:"กำลังเล่น",done:"ผ่านครบ"}[s];
-    return `<tr class="${s==="no"?"no":""}"><td>${esc(r.group)}</td><td>${esc(r.sid)}</td><td>${esc(r.name)}</td><td>${esc(r.nick)}</td><td class="n">${r.score}</td><td class="n">${stars(r)}/12</td><td class="n">${r.lv}/4</td><td class="n">${pt1(r).toFixed(2)}</td><td>${r.t?new Date(r.t).toLocaleString("th-TH",{dateStyle:"short",timeStyle:"short"}):"-"}</td><td><span class="pill ${s}">${lab}</span></td></tr>`}).join("")||'<tr><td colspan="10">ไม่พบรายการ</td></tr>'}
+    return `<tr class="${s==="no"?"no":""}"><td>${esc(r.group)}</td><td>${esc(r.sid)}</td><td>${esc(r.name)}</td><td>${esc(r.nick)}</td><td class="n">${r.score}</td><td class="n">${stars(r)}/12</td><td class="n">${r.lv}/4</td><td class="n">${d2(r)<0?"-":d2(r)+"/3"}</td><td class="n">${pt1(r).toFixed(2)}</td><td>${r.t?new Date(r.t).toLocaleString("th-TH",{dateStyle:"short",timeStyle:"short"}):"-"}</td><td><span class="pill ${s}">${lab}</span></td></tr>`}).join("")||'<tr><td colspan="11">ไม่พบรายการ</td></tr>'}
 $("th").addEventListener("click",e=>{const k=e.target.closest("th")?.dataset.k;if(!k)return;if(sortK===k)sortD*=-1;else{sortK=k;sortD=1}table()});
 ["q","fg","fs"].forEach(i=>$(i).addEventListener("input",()=>DATA&&table()));
 $("refresh").onclick=()=>load().catch(()=>{});
+$("saveHH").onclick=async()=>{try{const counts={};document.querySelectorAll(".hhin").forEach(i=>{counts[i.dataset.g]=i.value});await api({op:"setHouse",counts});msg("hmsg","บันทึกแล้ว",1);await load()}catch(e){msg("hmsg","บันทึกไม่สำเร็จ",0)}};
 $("saveOpen").onclick=async()=>{try{const open={};CHN.forEach((_,i)=>open[i+1]=$("sw"+(i+1)).checked);await api({op:"setOpen",open});msg("omsg","บันทึกแล้ว",1)}catch(e){msg("omsg","บันทึกไม่ได้ ตรวจรหัสครูหรืออินเทอร์เน็ต",0)}};
 $("csv").onclick=()=>{
-  const h=["กลุ่ม","รหัสนิสิต","ชื่อ-สกุล","ยินยอมวิจัย","ชื่อเล่น","แต้ม","ดาวรวม","ด่านที่ไปถึง","คะแนนมีส่วนร่วมบท1(เต็ม1)","เล่นล่าสุด","สถานะ"];
+  const h=["กลุ่ม","รหัสนิสิต","ชื่อ-สกุล","ยินยอมวิจัย","ชื่อเล่น","แต้ม","ดาวรวม","ด่านที่ไปถึง","จัดเรียงวินิจฉัย(ดาวดีที่สุด)","เก็บครัวเรือนครบโควตา","โบนัสเก็บเกินโควตา","คะแนนมีส่วนร่วมรวม(เต็ม5)","เล่นล่าสุด","สถานะ"];
   const q=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
-  const lines=[h.map(q).join(",")].concat(DATA.rows.map(r=>[r.group,r.sid,r.name,r.consent?"Y":"",r.nick,r.score,stars(r),r.lv,pt1(r).toFixed(2),r.t?new Date(r.t).toISOString():"",statusOf(r)].map(q).join(",")));
+  const lines=[h.map(q).join(",")].concat(DATA.rows.map(r=>[r.group,r.sid,r.name,r.consent?"Y":"",r.nick,r.score,stars(r),r.lv,d2(r)<0?"":d2(r),(r.hh&&r.hh.met)?"Y":"",(r.hh&&r.hh.bonus)||0,pt1(r).toFixed(2),r.t?new Date(r.t).toISOString():"",statusOf(r)].map(q).join(",")));
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+lines.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="progress.csv";document.body.appendChild(a);a.click();a.remove()};
 function confirmBox(text,fn){const c=$("cfm");c.hidden=false;c.innerHTML=esc(text)+' <button class="btn bad" id="cy">ยืนยัน</button> <button class="btn alt" id="cn">ยกเลิก</button>';$("cy").onclick=()=>{c.hidden=true;fn()};$("cn").onclick=()=>{c.hidden=true}}
 $("purge").onclick=()=>confirmBox("ลบแถวที่ไม่มีรหัสนิสิต (ข้อมูลทดสอบ) ถาวร",async()=>{try{const j=await api({op:"purgeNoSid"});msg("pmsg","ลบแล้ว "+j.removed+" แถว",1);load()}catch(e){msg("pmsg","ลบไม่ได้",0)}});
