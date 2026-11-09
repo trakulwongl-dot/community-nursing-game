@@ -71,15 +71,15 @@ const CHS=["","บทที่ 1 แนวคิดสำคัญ","บทท�
 const COL={1:"var(--leaf)",2:"var(--sea)",3:"var(--sun)",4:"var(--rose)",5:"#8a6bd1"};
 const N=[
  {c:1,t:"ผจญภัยหมู่บ้านสุขใจ",w:"เดี่ยว",d:"เกม 4 ด่าน เดินสำรวจหมู่บ้านและตอบคำถามแนวคิดพยาบาลชุมชน มีเกมในระบบแล้ว",game:1},
- {c:2,t:"เก็บข้อมูลครัวเรือน",w:"ทีม",d:"กลุ่มลงพื้นที่เก็บข้อมูลครัวเรือน โควตา 3 หลังต่อคน กลุ่มที่เก็บเกินโควตาได้โบนัส"},
+ {c:2,t:"เก็บข้อมูลครัวเรือน",w:"ทีม",m:"ch2-collect",d:"กลุ่มลงพื้นที่เก็บข้อมูลครัวเรือน โควตา 3 หลังต่อคน กลุ่มที่เก็บเกินโควตาได้โบนัส"},
  {c:2,t:"สร้าง Dummy table",w:"ทีม",d:"สรุปข้อมูลที่เก็บมาเป็นตารางจำนวนและร้อยละ 5 ด้าน"},
- {c:2,t:"จัดเรียงข้อวินิจฉัย",w:"ทีม",d:"เรียงองค์ประกอบของข้อวินิจฉัยการพยาบาลชุมชนให้ถูกต้อง"},
+ {c:2,t:"จัดเรียงข้อวินิจฉัย",w:"เดี่ยว",m:"ch2-diag",href:"diagnosis.html",d:"เรียงองค์ประกอบของข้อวินิจฉัยการพยาบาลชุมชนให้ถูกต้อง"},
  {c:2,t:"จัดลำดับปัญหา",w:"ทีม",d:"ให้คะแนนปัญหาตามเกณฑ์ ขนาด ความรุนแรง ความยากง่าย แล้วจัดลำดับความสำคัญ"},
  {c:2,t:"นำเสนอข้อมูล",w:"ทีม",d:"นำเสนอข้อมูลชุมชนของกลุ่ม ครูเป็นผู้ให้คะแนน",teacher:1},
  {c:3,t:"ตรวจวัตถุประสงค์โครงการ",w:"เดี่ยว",d:"ตรวจว่าวัตถุประสงค์โครงการเขียนถูกหลักหรือไม่ และแก้ให้ถูก"},
  {c:3,t:"ตรวจเกณฑ์การประเมินผล",w:"เดี่ยว",d:"จับคู่วัตถุประสงค์กับเกณฑ์ประเมินผลที่สอดคล้องกัน"},
- {c:4,t:"คำนวณค่าประสิทธิผล",w:"เดี่ยว",d:"ฝึกคำนวณค่าประสิทธิผลของโครงการจากโจทย์ ระบบตรวจคำตอบอัตโนมัติ"},
- {c:4,t:"แยกประเภทการประเมิน",w:"เดี่ยว",d:"จำแนกประเภทการประเมินผลจากสถานการณ์ที่กำหนด"},
+ {c:4,t:"คำนวณค่าประสิทธิผล",w:"เดี่ยว",m:"ch4-calc",href:"quiz.html?m=ch4-calc",d:"ฝึกคำนวณค่าประสิทธิผลของโครงการจากโจทย์ ระบบตรวจคำตอบอัตโนมัติ"},
+ {c:4,t:"แยกประเภทการประเมิน",w:"เดี่ยว",m:"ch4-type",href:"quiz.html?m=ch4-type",d:"จำแนกประเภทการประเมินผลจากสถานการณ์ที่กำหนด"},
  {c:5,t:"วิเคราะห์การใช้ยา",w:"เดี่ยว",d:"วิเคราะห์สถานการณ์การใช้ยาไม่สมเหตุผลในชุมชน"},
  {c:5,t:"บทบาทพยาบาลกับวัฒนธรรม",w:"เดี่ยว",d:"เลือกบทบาทพยาบาลที่เหมาะกับบริบทวัฒนธรรมของผู้รับบริการ"}
 ];
@@ -90,6 +90,8 @@ let OPEN={1:true},ME=null,sel=0;
 function h(tag,a,p){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
 function stateOf(n){
   if(n.c===1&&ME&&ME.lv>=4)return"done";
+  if(n.m==="ch2-collect"&&ME&&ME.hh&&ME.hh.met)return"done";
+  if(n.m&&ME&&ME.m[n.m])return"done";
   return OPEN[n.c]?"live":"lock"}
 function current(){const i=N.findIndex(n=>stateOf(n)==="live");return i<0?-1:i}
 function draw(){
@@ -120,19 +122,25 @@ function pick(i){sel=i;draw();const n=N[i],s=stateOf(n),el=$("detail");el.innerH
   [[n.w,n.w==="ทีม"?"chip team":"chip"],[s==="done"?"ผ่านแล้ว":s==="live"?"เปิดแล้ว":"ยังไม่เปิด","chip "+s],[n.teacher?"ครูให้คะแนน":"ตรวจอัตโนมัติ","chip"]].forEach(c=>{const x=document.createElement("span");x.className=c[1];x.textContent=c[0];ch.appendChild(x)});
   el.appendChild(ch);add("p",n.d,"note");
   if(n.game){if(ME)add("p",`ด่านที่ผ่าน ${ME.lv}/4 · ดาว ${ME.st}/12`,"note");const w=document.createElement("div"),a=document.createElement("a");a.className="btn";a.href="index.html";a.textContent="เข้าเกม";w.appendChild(a);el.appendChild(w)}
+  else if(n.m==="ch2-collect"&&ME&&ME.hh){const h=ME.hh;add("p",`กลุ่มของคุณเก็บได้ ${h.count} หลัง จากโควตา ${h.quota} หลัง (${h.members} คน × 3)`+(h.bonus?` · เกินโควตา ได้โบนัส +${h.bonus}`:h.met?" · ครบโควตาแล้ว":""),"note")}
+  else if(n.href&&(s==="live"||s==="done")){const q=ME&&ME.m[n.m];if(q)add("p",`ดาวที่ดีที่สุด ${"★".repeat(q.best)}${"☆".repeat(3-q.best)} · ส่งแล้ว ${q.attempts} ครั้ง`,"note");const w=document.createElement("div"),a=document.createElement("a");a.className="btn";a.href=n.href;a.textContent=q?"ทำอีกครั้ง":"เริ่มภารกิจ";w.appendChild(a);el.appendChild(w)}
   else if(s==="live")add("p","ครูเปิดป้ายนี้แล้ว ทำภารกิจตามที่ครูบอกในชั่วโมงเรียน (ระบบบันทึกคะแนนของป้ายนี้ยังอยู่ระหว่างพัฒนา)","note");
 }
 function part(){
   if(!ME){$("part").hidden=true;return}
   $("part").hidden=false;let tot=0;const rows=[];
-  for(let c=1;c<=5;c++){let v=null;if(c===1){v=Math.min(1,ME.lv/4);tot+=v}
-    rows.push(`<tr><td>${CHS[c]}</td><td class="n">${v==null?'<span class="note">รอระบบ</span>':v.toFixed(2)+" / 1"}</td></tr>`)}
+  for(let c=1;c<=5;c++){let v=null,x="";if(c===1){v=Math.min(1,ME.lv/4)}
+    else if(N.some(n=>n.c===c&&n.m)){const tot=N.filter(n=>n.c===c).length,k=N.filter(n=>n.c===c&&n.m&&(n.m==="ch2-collect"?(ME.hh&&ME.hh.met):ME.m[n.m])).length;v=k/tot;x=` (${k}/${tot} ภารกิจ)`}
+    if(v!=null)tot+=v;
+    rows.push(`<tr><td>${CHS[c]}</td><td class="n">${v==null?'<span class="note">รอระบบ</span>':v.toFixed(2)+" / 1"+x}</td></tr>`)}
+  const bn=(ME.hh&&ME.hh.bonus)||0;if(bn)rows.push(`<tr><td>โบนัสเก็บข้อมูลเกินโควตา</td><td class="n">+${bn}</td></tr>`);
+  tot=Math.min(5,tot+bn);
   $("pt").innerHTML=rows.join("");$("ptot").textContent=tot.toFixed(2)+" / 5";$("pbar").style.width=(tot/5*100)+"%"}
 async function loadOpen(){try{const r=await fetch(SHEET_URL,{redirect:"follow"}),j=await r.json();if(j&&j.ok&&j.open){OPEN=j.open}}catch(e){}}
 $("lf").onsubmit=async e=>{e.preventDefault();const sid=($("sid").value||"").replace(/[^0-9A-Za-z]/g,""),m=$("lmsg");m.hidden=true;if(sid.length<5){m.textContent="กรุณากรอกรหัสนิสิต";m.hidden=false;return}
   try{const r=await fetch(SHEET_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"login",sid})}),j=await r.json();
     if(!j.ok)throw new Error(j.error||"fail");
-    const s=j.saved||{};ME={lv:Math.min(4,s.lv||0),st:(s.stars||[]).reduce((a,b)=>a+(b||0),0)};
+    const s=j.saved||{};ME={hh:j.hh||null,lv:Math.min(4,s.lv||0),st:(s.stars||[]).reduce((a,b)=>a+(b||0),0),m:j.missions||{}};
     try{sessionStorage.setItem("cn-sid",sid)}catch(x){}
     $("login").hidden=true;const cur=current();sel=cur<0?0:cur;draw();pick(sel);part();
   }catch(x){m.textContent=x.message==="not_in_roster"?"ไม่พบรหัสนิสิตนี้ในรายชื่อรายวิชา ตรวจรหัสอีกครั้งหรือแจ้งอาจารย์":"เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง";m.hidden=false}};
