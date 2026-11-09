@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>แผนที่เส้นทาง · การพยาบาลชุมชน 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600&family=Prompt:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#eaf4e2;--surface:#fffaf0;--soft:#f3ead3;--ink:#23323b;--muted:#5b6b73;--leaf:#3f9b5a;--leaf2:#8cc87f;--sun:#f6b73c;--rose:#d9483d;--sea:#2d8fb8;--line:#23323b;--path:#c9b98f;--ground:#d6ecc4;--roof:#d9483d;--fd:'Kanit','Prompt',sans-serif;--fb:'Prompt','Tahoma',sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16211c;--surface:#1f2e27;--soft:#2a3b33;--ink:#eef3ea;--muted:#a9b9b0;--leaf:#6cc487;--leaf2:#3f7a52;--sun:#f3bd55;--rose:#ef7a6f;--sea:#6bb8dc;--line:#eef3ea;--path:#6f8577;--ground:#22362b;--roof:#ef7a6f;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--fb);font-size:16px;line-height:1.6;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:560px;margin:0 auto;display:grid;gap:18px}
+h1,h2,h3{font-family:var(--fd);font-weight:600;line-height:1.25;margin:0;text-wrap:balance}
+h1{font-size:clamp(26px,6vw,34px)}h2{font-size:20px}h3{font-size:18px}
+p{margin:0}.tag{font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--sea)}
+.note{font-size:14.5px;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{display:inline-block;font:600 15px var(--fb);color:#23323b;background:var(--sun);border:2.5px solid var(--line);border-radius:14px;padding:8px 16px;text-decoration:none;cursor:pointer;box-shadow:0 3px 0 var(--line)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}.btn.alt{background:var(--surface);color:var(--ink)}
+input[type=text],input[inputmode]{font:500 16px var(--fb);padding:9px 12px;border:2px solid var(--line);border-radius:12px;background:#fff;color:#23323b;min-width:0;flex:1 1 160px}
+.card{background:var(--surface);border:2.5px solid var(--line);border-radius:20px;box-shadow:0 5px 0 var(--line);padding:16px;display:grid;gap:10px}
+.msg{font-size:14px;font-weight:600}.msg.err{color:var(--rose)}
+.mapbox{background:var(--ground);border:2.5px solid var(--line);border-radius:22px;box-shadow:0 5px 0 var(--line);padding:6px;overflow:hidden}
+svg{display:block;width:100%;height:auto}
+.node{cursor:pointer}.node:focus{outline:none}.node:focus-visible .ring{stroke:var(--sea);stroke-width:5}
+.lbl{font-family:var(--fb);font-size:13px;font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--ground);stroke-width:4px;stroke-linejoin:round}
+.lbl2{font-family:var(--fb);font-size:10.5px;font-weight:500;fill:var(--muted);paint-order:stroke;stroke:var(--ground);stroke-width:4px;stroke-linejoin:round}
+.num{font-family:var(--fd);font-size:15px;font-weight:600;text-anchor:middle}
+.you{font-family:var(--fd);font-size:11px;font-weight:600;fill:#fff;text-anchor:middle}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted);padding:2px 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid var(--line);vertical-align:-1px;margin-right:5px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{font-size:12.5px;font-weight:600;border:2px solid var(--line);border-radius:999px;padding:0 10px;background:var(--soft)}
+.chip.live{background:var(--sun);color:#23323b}.chip.done{background:var(--leaf);color:#fff;border-color:var(--leaf)}.chip.lock{border-style:dashed;background:transparent;color:var(--muted)}.chip.team{background:var(--sea);color:#fff;border-color:var(--sea)}
+table{width:100%;border-collapse:collapse;font-size:14.5px}td{padding:5px 4px;border-bottom:1.5px dashed var(--path)}td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.bar{height:10px;border:2px solid var(--line);border-radius:8px;background:var(--soft);overflow:hidden}.bar i{display:block;height:100%;background:var(--leaf)}
+:focus-visible{outline:3px solid var(--sea);outline-offset:2px}[hidden]{display:none!important}
+@media (prefers-reduced-motion:no-preference){.pulse{animation:pl 1.8s ease-out infinite;transform-box:fill-box;transform-origin:center}@keyframes pl{from{transform:scale(1);opacity:.7}to{transform:scale(1.9);opacity:0}}}
+</style></head><body><div class="wrap">
+<header style="display:grid;gap:8px">
+  <div class="tag">10130364 การพยาบาลชุมชน 2</div>
+  <h1>แผนที่เส้นทางพยาบาลชุมชน</h1>
+  <p class="note">กรอกรหัสนิสิตเพื่อดูว่าคุณเดินทางมาถึงป้ายไหนแล้ว ป้ายที่ครูเปิดตามชั่วโมงสอนจะขึ้นสีเหลือง</p>
+  <div class="row"><a class="btn" href="index.html">เล่นเกมบทที่ 1 ▶</a><a class="btn alt" href="leaderboard.html">กระดานอันดับ</a></div>
+</header>
+
+<section class="card" id="login">
+  <form class="row" id="lf"><label class="note" for="sid">รหัสนิสิต</label><input id="sid" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="เช่น 66010xxx"><button class="btn" type="submit">ดูความคืบหน้าของฉัน</button></form>
+  <div class="msg err" id="lmsg" hidden></div>
+  <div class="note">ไม่กรอกรหัสก็ดูแผนที่รวมได้ ระบบใช้รหัสนิสิตเพื่อแสดงความคืบหน้าและคะแนนมีส่วนร่วมของคุณเท่านั้น คนอื่นไม่เห็น</div>
+</section>
+
+<section aria-label="แผนที่">
+  <div class="mapbox"><svg id="map" role="group" aria-label="แผนที่ 12 ป้ายหยุด"></svg></div>
+  <div class="legend"><span><i style="background:var(--leaf)"></i>ผ่านแล้ว</span><span><i style="background:var(--sun)"></i>เปิดแล้ว</span><span><i style="background:var(--surface);border-style:dashed"></i>ยังไม่เปิด</span><span id="lgd"></span></div>
+</section>
+
+<section class="card" id="detail" aria-live="polite"></section>
+
+<section class="card" id="part" hidden>
+  <h2>คะแนนมีส่วนร่วมของฉัน</h2>
+  <div class="note">เต็ม 5 คะแนน บทละ 1 คะแนน คิดจากจำนวนด่านที่ทำครบ ไม่ใช่จากความถูกต้อง</div>
+  <table id="pt"></table>
+  <div class="row" style="justify-content:space-between"><b>รวม</b><b id="ptot"></b></div>
+  <div class="bar"><i id="pbar" style="width:0"></i></div>
+</section>
+</div>
+<script>
+"use strict";
+const SHEET_URL="https://script.google.com/macros/s/AKfycbx6PC4sfC9m2FEYOionsVGpvt1dclejuPBhh8SOtYy5YIbsthC41O-lohVUwIMjYwGA6g/exec";
+const $=id=>document.getElementById(id);
+const CHS=["","บทที่ 1 แนวคิดสำคัญ","บทที่ 2 ประเมินและวินิจฉัย","บทที่ 3 วางแผน","บทที่ 4 ประเมินผล","บทที่ 5 ยาและวัฒนธรรม"];
+const COL={1:"var(--leaf)",2:"var(--sea)",3:"var(--sun)",4:"var(--rose)",5:"#8a6bd1"};
+const N=[
+ {c:1,t:"ผจญภัยหมู่บ้านสุขใจ",w:"เดี่ยว",d:"เกม 4 ด่าน เดินสำรวจหมู่บ้านและตอบคำถามแนวคิดพยาบาลชุมชน มีเกมในระบบแล้ว",game:1},
+ {c:2,t:"เก็บข้อมูลครัวเรือน",w:"ทีม",d:"กลุ่มลงพื้นที่เก็บข้อมูลครัวเรือน โควตา 3 หลังต่อคน กลุ่มที่เก็บเกินโควตาได้โบนัส"},
+ {c:2,t:"สร้าง Dummy table",w:"ทีม",d:"สรุปข้อมูลที่เก็บมาเป็นตารางจำนวนและร้อยละ 5 ด้าน"},
+ {c:2,t:"จัดเรียงข้อวินิจฉัย",w:"ทีม",d:"เรียงองค์ประกอบของข้อวินิจฉัยการพยาบาลชุมชนให้ถูกต้อง"},
+ {c:2,t:"จัดลำดับปัญหา",w:"ทีม",d:"ให้คะแนนปัญหาตามเกณฑ์ ขนาด ความรุนแรง ความยากง่าย แล้วจัดลำดับความสำคัญ"},
+ {c:2,t:"นำเสนอข้อมูล",w:"ทีม",d:"นำเสนอข้อมูลชุมชนของกลุ่ม ครูเป็นผู้ให้คะแนน",teacher:1},
+ {c:3,t:"ตรวจวัตถุประสงค์โครงการ",w:"เดี่ยว",d:"ตรวจว่าวัตถุประสงค์โครงการเขียนถูกหลักหรือไม่ และแก้ให้ถูก"},
+ {c:3,t:"ตรวจเกณฑ์การประเมินผล",w:"เดี่ยว",d:"จับคู่วัตถุประสงค์กับเกณฑ์ประเมินผลที่สอดคล้องกัน"},
+ {c:4,t:"คำนวณค่าประสิทธิผล",w:"เดี่ยว",d:"ฝึกคำนวณค่าประสิทธิผลของโครงการจากโจทย์ ระบบตรวจคำตอบอัตโนมัติ"},
+ {c:4,t:"แยกประเภทการประเมิน",w:"เดี่ยว",d:"จำแนกประเภทการประเมินผลจากสถานการณ์ที่กำหนด"},
+ {c:5,t:"วิเคราะห์การใช้ยา",w:"เดี่ยว",d:"วิเคราะห์สถานการณ์การใช้ยาไม่สมเหตุผลในชุมชน"},
+ {c:5,t:"บทบาทพยาบาลกับวัฒนธรรม",w:"เดี่ยว",d:"เลือกบทบาทพยาบาลที่เหมาะกับบริบทวัฒนธรรมของผู้รับบริการ"}
+];
+const NS="http://www.w3.org/2000/svg",svg=$("map");
+const H=80+(N.length-1)*76+70;svg.setAttribute("viewBox","0 0 360 "+H);
+N.forEach((n,i)=>{n.x=i%2?260:90;n.y=80+i*76});
+let OPEN={1:true},ME=null,sel=0;
+function h(tag,a,p){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+function stateOf(n){
+  if(n.c===1&&ME&&ME.lv>=4)return"done";
+  return OPEN[n.c]?"live":"lock"}
+function current(){const i=N.findIndex(n=>stateOf(n)==="live");return i<0?-1:i}
+function draw(){
+  svg.innerHTML="";
+  [[30,130],[326,70],[320,230],[36,330],[326,420],[30,520],[322,620],[34,700],[326,790],[30,860],[322,910]].forEach(t=>{const g=h("g",{transform:`translate(${t[0]} ${t[1]})`},svg);h("rect",{x:-2,y:0,width:4,height:9,fill:"var(--path)"},g);h("circle",{cx:0,cy:-4,r:10,fill:"var(--leaf2)",stroke:"var(--line)","stroke-width":2},g)});
+  let d="M"+N[0].x+","+N[0].y;for(let i=1;i<N.length;i++){const a=N[i-1],b=N[i],my=(a.y+b.y)/2;d+=` C${a.x},${my} ${b.x},${my} ${b.x},${b.y}`}
+  h("path",{d,fill:"none",stroke:"var(--line)","stroke-width":13,"stroke-linecap":"round",opacity:.9},svg);
+  h("path",{d,fill:"none",stroke:"var(--path)","stroke-width":8,"stroke-linecap":"round"},svg);
+  h("path",{d,fill:"none",stroke:"var(--surface)","stroke-width":1.6,"stroke-dasharray":"2 7","stroke-linecap":"round"},svg);
+  const cur=current();
+  N.forEach((n,i)=>{
+    const s=stateOf(n),g=h("g",{"class":"node",tabindex:0,role:"button","aria-label":`${i+1}. ${n.t} ${s==="done"?"ผ่านแล้ว":s==="live"?"เปิดแล้ว":"ยังไม่เปิด"}`},svg);
+    if(s==="live")h("circle",{cx:n.x,cy:n.y,r:17,fill:"var(--sun)","class":"pulse"},g);
+    h("circle",{"class":"ring",cx:n.x,cy:n.y,r:17,fill:s==="done"?"var(--leaf)":s==="live"?"var(--sun)":"var(--surface)",stroke:COL[n.c],"stroke-width":i===sel?6:4,"stroke-dasharray":s==="lock"?"4 3":"none"},g);
+    h("circle",{cx:n.x,cy:n.y,r:17,fill:"none",stroke:"var(--line)","stroke-width":1.5},g);
+    const tx=h("text",{"class":"num",x:n.x,y:n.y+5},g);tx.textContent=s==="done"?"✓":i+1;tx.style.fill=s==="done"?"#fff":s==="live"?"#23323b":"var(--ink)";
+    const left=n.x>180,lx=left?n.x-25:n.x+25,an=left?"end":"start";
+    const t1=h("text",{"class":"lbl",x:lx,y:n.y-1,"text-anchor":an},g);t1.textContent=n.t;
+    const t2=h("text",{"class":"lbl2",x:lx,y:n.y+13,"text-anchor":an},g);t2.textContent=`บทที่ ${n.c} · ${n.w}`;
+    g.addEventListener("click",()=>pick(i));g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(i)}});
+  });
+  if(ME&&cur>=0){const n=N[cur],g=h("g",{},svg);h("rect",{x:n.x-34,y:n.y-50,width:68,height:20,rx:10,fill:"var(--rose)",stroke:"var(--line)","stroke-width":2},g);h("path",{d:`M${n.x-6} ${n.y-31} L${n.x} ${n.y-22} L${n.x+6} ${n.y-31} Z`,fill:"var(--rose)",stroke:"var(--line)","stroke-width":2,"stroke-linejoin":"round"},g);const t=h("text",{"class":"you",x:n.x,y:n.y-36},g);t.textContent="คุณอยู่ที่นี่"}
+}
+function pick(i){sel=i;draw();const n=N[i],s=stateOf(n),el=$("detail");el.innerHTML="";
+  const add=(tag,txt,cls)=>{const e=document.createElement(tag);if(cls)e.className=cls;e.textContent=txt;el.appendChild(e);return e};
+  add("div",`ป้ายที่ ${i+1} จาก ${N.length} · ${CHS[n.c]}`,"tag");add("h3",n.t);
+  const ch=document.createElement("div");ch.className="chips";
+  [[n.w,n.w==="ทีม"?"chip team":"chip"],[s==="done"?"ผ่านแล้ว":s==="live"?"เปิดแล้ว":"ยังไม่เปิด","chip "+s],[n.teacher?"ครูให้คะแนน":"ตรวจอัตโนมัติ","chip"]].forEach(c=>{const x=document.createElement("span");x.className=c[1];x.textContent=c[0];ch.appendChild(x)});
+  el.appendChild(ch);add("p",n.d,"note");
+  if(n.game){if(ME)add("p",`ด่านที่ผ่าน ${ME.lv}/4 · ดาว ${ME.st}/12`,"note");const w=document.createElement("div"),a=document.createElement("a");a.className="btn";a.href="index.html";a.textContent="เข้าเกม";w.appendChild(a);el.appendChild(w)}
+  else if(s==="live")add("p","ครูเปิดป้ายนี้แล้ว ทำภารกิจตามที่ครูบอกในชั่วโมงเรียน (ระบบบันทึกคะแนนของป้ายนี้ยังอยู่ระหว่างพัฒนา)","note");
+}
+function part(){
+  if(!ME){$("part").hidden=true;return}
+  $("part").hidden=false;let tot=0;const rows=[];
+  for(let c=1;c<=5;c++){let v=null;if(c===1){v=Math.min(1,ME.lv/4);tot+=v}
+    rows.push(`<tr><td>${CHS[c]}</td><td class="n">${v==null?'<span class="note">รอระบบ</span>':v.toFixed(2)+" / 1"}</td></tr>`)}
+  $("pt").innerHTML=rows.join("");$("ptot").textContent=tot.toFixed(2)+" / 5";$("pbar").style.width=(tot/5*100)+"%"}
+async function loadOpen(){try{const r=await fetch(SHEET_URL,{redirect:"follow"}),j=await r.json();if(j&&j.ok&&j.open){OPEN=j.open}}catch(e){}}
+$("lf").onsubmit=async e=>{e.preventDefault();const sid=($("sid").value||"").replace(/[^0-9A-Za-z]/g,""),m=$("lmsg");m.hidden=true;if(sid.length<5){m.textContent="กรุณากรอกรหัสนิสิต";m.hidden=false;return}
+  try{const r=await fetch(SHEET_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"login",sid})}),j=await r.json();
+    if(!j.ok)throw new Error(j.error||"fail");
+    const s=j.saved||{};ME={lv:Math.min(4,s.lv||0),st:(s.stars||[]).reduce((a,b)=>a+(b||0),0)};
+    try{sessionStorage.setItem("cn-sid",sid)}catch(x){}
+    $("login").hidden=true;const cur=current();sel=cur<0?0:cur;draw();pick(sel);part();
+  }catch(x){m.textContent=x.message==="not_in_roster"?"ไม่พบรหัสนิสิตนี้ในรายชื่อรายวิชา ตรวจรหัสอีกครั้งหรือแจ้งอาจารย์":"เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง";m.hidden=false}};
+loadOpen().then(()=>{draw();pick(Math.max(0,current()))});
+draw();pick(0);
+</script></body></html>

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>หน้าครู · เส้นทางพยาบาลชุมชน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600&family=Prompt:wght@400;500;600&display=swap">
+<style>
+:root{--ink:#23323b;--paper:#fffaf0;--soft:#f3ead3;--sun:#f6b73c;--leaf:#3f9b5a;--sea:#2d8fb8;--rose:#d9483d;--bg:#eaf4e2;--muted:#5b6b73;--fd:'Kanit','Prompt',sans-serif;--fb:'Prompt','Tahoma',sans-serif;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--fb);font-size:15px;line-height:1.55;padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) 48px max(14px,env(safe-area-inset-left))}
+.wrap{max-width:1000px;margin:0 auto;display:grid;gap:16px}
+h1,h2{font-family:var(--fd);font-weight:600;margin:0;line-height:1.25}
+h1{font-size:clamp(22px,5vw,30px)} h2{font-size:18px}
+.card{background:var(--paper);border:2.5px solid var(--ink);border-radius:18px;box-shadow:0 4px 0 var(--ink);padding:14px;display:grid;gap:10px;min-width:0}
+.btn{font:600 14px var(--fb);color:var(--ink);background:var(--sun);border:2.5px solid var(--ink);border-radius:12px;padding:7px 14px;cursor:pointer;box-shadow:0 3px 0 var(--ink)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.btn.alt{background:#fff}.btn.bad{background:var(--rose);color:#fff}
+.btn[disabled]{opacity:.5;cursor:default}
+input[type=password],input[type=search],select{font:500 15px var(--fb);padding:8px 10px;border:2px solid var(--ink);border-radius:10px;background:#fff;color:var(--ink);min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.note{font-size:13.5px;color:var(--muted)}
+.msg{font-size:14px;font-weight:600}.msg.err{color:var(--rose)}.msg.ok{color:var(--leaf)}
+.chs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:8px;border:2px solid var(--ink);border-radius:12px;padding:8px 10px;background:#fff;font-weight:600}
+.sw{appearance:none;width:44px;height:26px;border-radius:999px;border:2px solid var(--ink);background:#d9d4c3;position:relative;cursor:pointer;flex:none}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--ink);transition:left .12s}
+.sw:checked{background:var(--leaf)}.sw:checked::after{left:20px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.st{border:2px solid var(--ink);border-radius:12px;padding:8px;background:#fff;text-align:center}
+.st b{display:block;font-family:var(--fd);font-size:22px}.st span{font-size:12.5px;color:var(--muted)}
+.tw{overflow-x:auto;border:2px solid var(--ink);border-radius:12px;background:#fff}
+table{border-collapse:collapse;width:100%;min-width:720px}
+th,td{padding:6px 10px;border-bottom:1.5px dashed #e6d9bd;text-align:left;white-space:nowrap}
+th{font-size:12.5px;background:var(--soft);position:sticky;top:0;cursor:pointer;user-select:none}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.no td{color:var(--muted);background:#fbf6ea}
+.pill{display:inline-block;font-size:12px;font-weight:600;border:2px solid var(--ink);border-radius:999px;padding:0 9px}
+.pill.go{background:var(--sun)}.pill.done{background:#bfe8c8}.pill.no{background:#fff;border-style:dashed;color:var(--muted)}
+.gs{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.g{border:2px solid var(--ink);border-radius:12px;padding:8px;background:#fff;font-size:13.5px}
+.g b{font-family:var(--fd);font-size:16px}
+.bar{height:8px;border:1.5px solid var(--ink);border-radius:6px;background:var(--soft);overflow:hidden;margin-top:4px}.bar i{display:block;height:100%;background:var(--leaf)}
+:focus-visible{outline:3px solid var(--sea);outline-offset:2px}
+[hidden]{display:none!important}
+</style></head><body><div class="wrap">
+<header class="row" style="justify-content:space-between"><div><h1>หน้าครู</h1><div class="note">10130364 การพยาบาลชุมชน 2 · เฉพาะผู้สอน</div></div><a class="btn alt" style="text-decoration:none" href="index.html">กลับไปเกม</a></header>
+
+<section class="card" id="login">
+  <h2>เข้าสู่ระบบครู</h2>
+  <form class="row" id="lf"><label for="key" class="note">รหัสครู</label><input type="password" id="key" autocomplete="current-password" placeholder="รหัสครู"><button class="btn" type="submit">เข้า</button><span class="msg" id="lmsg"></span></form>
+  <div class="note">รหัสครูอยู่ใน Code.gs (ADMIN_KEY) ถ้ายังใช้รหัสเดิมที่เคยพิมพ์ในแชท ควรเปลี่ยนก่อน</div>
+</section>
+
+<div id="app" hidden class="wrap" style="max-width:none">
+  <section class="card">
+    <h2>เปิด / ล็อกบท</h2>
+    <div class="note">นิสิตเห็นสถานะนี้เมื่อเกมหรือแผนที่อ่านค่าจากเซิร์ฟเวอร์ กดสวิตช์แล้วกด "บันทึก"</div>
+    <div class="chs" id="chs"></div>
+    <div class="row"><button class="btn" id="saveOpen">บันทึกการเปิด/ล็อก</button><span class="msg" id="omsg"></span></div>
+  </section>
+
+  <section class="card">
+    <div class="row" style="justify-content:space-between"><h2>ภาพรวม</h2><button class="btn alt" id="refresh">รีเฟรช</button></div>
+    <div class="stats" id="stats"></div>
+    <div class="gs" id="gs"></div>
+  </section>
+
+  <section class="card">
+    <h2>รายชื่อและความคืบหน้า (บทที่ 1)</h2>
+    <div class="row">
+      <input type="search" id="q" placeholder="ค้นหาชื่อ รหัส ชื่อเล่น">
+      <select id="fg"><option value="">ทุกกลุ่ม</option></select>
+      <select id="fs"><option value="">ทุกสถานะ</option><option value="no">ยังไม่เริ่ม</option><option value="go">กำลังเล่น</option><option value="done">ผ่านครบ 4 ด่าน</option></select>
+      <button class="btn alt" id="csv">ส่งออก CSV</button>
+    </div>
+    <div class="tw"><table><thead><tr id="th"></tr></thead><tbody id="tb"></tbody></table></div>
+    <div class="note" id="foot"></div>
+  </section>
+
+  <section class="card">
+    <h2>จัดการข้อมูล</h2>
+    <div class="row"><button class="btn bad" id="purge">ลบแถวทดสอบที่ไม่มีรหัสนิสิต</button><span class="msg" id="pmsg"></span></div>
+    <div class="row"><button class="btn bad" id="season">เริ่มรอบใหม่ (ล้างกระดานอันดับ)</button><span class="msg" id="smsg"></span></div>
+    <div class="note" id="cfm" hidden></div>
+  </section>
+</div>
+</div>
+<script>
+"use strict";
+const SHEET_URL="https://script.google.com/macros/s/AKfycbx6PC4sfC9m2FEYOionsVGpvt1dclejuPBhh8SOtYy5YIbsthC41O-lohVUwIMjYwGA6g/exec";
+const $=id=>document.getElementById(id),esc=t=>String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const CHN=["บทที่ 1 แนวคิดสำคัญ","บทที่ 2 ประเมินและวินิจฉัย","บทที่ 3 วางแผน","บทที่ 4 ประเมินผล","บทที่ 5 ยาและวัฒนธรรม"];
+let KEY="",DATA=null,sortK="group",sortD=1;
+try{KEY=sessionStorage.getItem("cn-admin")||""}catch(e){}
+async function api(body){
+  const r=await fetch(SHEET_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({action:"admin",key:KEY},body))});
+  const j=await r.json();if(!j||!j.ok)throw new Error((j&&j.error)||"fail");return j}
+function msg(id,t,ok){const e=$(id);e.textContent=t;e.className="msg "+(ok?"ok":"err")}
+function statusOf(r){return !r.started?"no":(r.lv>=4?"done":"go")}
+const stars=r=>(r.stars||[]).reduce((a,b)=>a+(b||0),0);
+async function load(){
+  const j=await api({op:"progress"});DATA=j;
+  CHN.forEach((_,i)=>{const s=$("sw"+(i+1));if(s)s.checked=!!j.open[i+1]});
+  render()}
+function buildChs(){$("chs").innerHTML=CHN.map((n,i)=>`<label class="ch"><span>${esc(n)}</span><input type="checkbox" class="sw" id="sw${i+1}" aria-label="${esc(n)}"></label>`).join("")}
+function render(){
+  const rows=DATA.rows,tot=rows.length,st={no:0,go:0,done:0};rows.forEach(r=>st[statusOf(r)]++);
+  const avg=tot?Math.round(rows.reduce((a,r)=>a+r.score,0)/tot):0;
+  $("stats").innerHTML=[[tot,"นิสิตในรายชื่อ"],[st.go+st.done,"เริ่มเล่นแล้ว"],[st.no,"ยังไม่เริ่ม"],[st.done,"ผ่านครบ 4 ด่าน"],[avg,"แต้มเฉลี่ย"]].map(x=>`<div class="st"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
+  const gm={};rows.forEach(r=>{const g=r.group||"-";(gm[g]=gm[g]||{n:0,s:0,d:0}).n++;if(r.started)gm[g].s++;if(r.lv>=4)gm[g].d++});
+  $("gs").innerHTML=Object.keys(gm).sort().map(g=>{const x=gm[g],p=Math.round(100*x.s/x.n);return `<div class="g"><b>กลุ่ม ${esc(g)}</b><div>เริ่มแล้ว ${x.s}/${x.n} · จบ ${x.d}</div><div class="bar"><i style="width:${p}%"></i></div></div>`}).join("");
+  const fg=$("fg"),cur=fg.value;fg.innerHTML='<option value="">ทุกกลุ่ม</option>'+Object.keys(gm).sort().map(g=>`<option value="${esc(g)}">กลุ่ม ${esc(g)}</option>`).join("");fg.value=cur;
+  table();
+  $("foot").textContent=`ข้อมูลล่าสุดเมื่อ ${new Date().toLocaleTimeString("th-TH")} · แถวทดสอบที่ไม่มีรหัสนิสิต ${DATA.nosid} แถว · ผู้เล่นที่รหัสไม่อยู่ในรายชื่อ ${DATA.extra} คน`}
+const COLS=[["group","กลุ่ม"],["sid","รหัสนิสิต"],["name","ชื่อ-สกุล"],["nick","ชื่อเล่น"],["score","แต้ม",1],["st","ดาว",1],["lv","ด่าน",1],["pt","ส่วนร่วม บท1 /1",1],["t","เล่นล่าสุด"],["state","สถานะ"]];
+const pt1=r=>Math.min(1,(r.lv||0)/4);
+function val(r,k){return k==="pt"?pt1(r):k==="st"?stars(r):k==="state"?statusOf(r):r[k]}
+function table(){
+  $("th").innerHTML=COLS.map(c=>`<th data-k="${c[0]}" class="${c[2]?"n":""}">${c[1]}${sortK===c[0]?(sortD>0?" ▲":" ▼"):""}</th>`).join("");
+  const q=$("q").value.trim().toLowerCase(),g=$("fg").value,s=$("fs").value;
+  let rows=DATA.rows.filter(r=>(!g||String(r.group)===g)&&(!s||statusOf(r)===s)&&(!q||[r.name,r.sid,r.nick].join(" ").toLowerCase().includes(q)));
+  rows.sort((a,b)=>{const x=val(a,sortK),y=val(b,sortK);return (typeof x==="number"&&typeof y==="number"?x-y:String(x).localeCompare(String(y),"th",{numeric:true}))*sortD||String(a.sid).localeCompare(String(b.sid))});
+  $("tb").innerHTML=rows.map(r=>{const s=statusOf(r),lab={no:"ยังไม่เริ่ม",go:"กำลังเล่น",done:"ผ่านครบ"}[s];
+    return `<tr class="${s==="no"?"no":""}"><td>${esc(r.group)}</td><td>${esc(r.sid)}</td><td>${esc(r.name)}</td><td>${esc(r.nick)}</td><td class="n">${r.score}</td><td class="n">${stars(r)}/12</td><td class="n">${r.lv}/4</td><td class="n">${pt1(r).toFixed(2)}</td><td>${r.t?new Date(r.t).toLocaleString("th-TH",{dateStyle:"short",timeStyle:"short"}):"-"}</td><td><span class="pill ${s}">${lab}</span></td></tr>`}).join("")||'<tr><td colspan="10">ไม่พบรายการ</td></tr>'}
+$("th").addEventListener("click",e=>{const k=e.target.closest("th")?.dataset.k;if(!k)return;if(sortK===k)sortD*=-1;else{sortK=k;sortD=1}table()});
+["q","fg","fs"].forEach(i=>$(i).addEventListener("input",()=>DATA&&table()));
+$("refresh").onclick=()=>load().catch(()=>{});
+$("saveOpen").onclick=async()=>{try{const open={};CHN.forEach((_,i)=>open[i+1]=$("sw"+(i+1)).checked);await api({op:"setOpen",open});msg("omsg","บันทึกแล้ว",1)}catch(e){msg("omsg","บันทึกไม่ได้ ตรวจรหัสครูหรืออินเทอร์เน็ต",0)}};
+$("csv").onclick=()=>{
+  const h=["กลุ่ม","รหัสนิสิต","ชื่อ-สกุล","ยินยอมวิจัย","ชื่อเล่น","แต้ม","ดาวรวม","ด่านที่ไปถึง","คะแนนมีส่วนร่วมบท1(เต็ม1)","เล่นล่าสุด","สถานะ"];
+  const q=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
+  const lines=[h.map(q).join(",")].concat(DATA.rows.map(r=>[r.group,r.sid,r.name,r.consent?"Y":"",r.nick,r.score,stars(r),r.lv,pt1(r).toFixed(2),r.t?new Date(r.t).toISOString():"",statusOf(r)].map(q).join(",")));
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+lines.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="progress.csv";document.body.appendChild(a);a.click();a.remove()};
+function confirmBox(text,fn){const c=$("cfm");c.hidden=false;c.innerHTML=esc(text)+' <button class="btn bad" id="cy">ยืนยัน</button> <button class="btn alt" id="cn">ยกเลิก</button>';$("cy").onclick=()=>{c.hidden=true;fn()};$("cn").onclick=()=>{c.hidden=true}}
+$("purge").onclick=()=>confirmBox("ลบแถวที่ไม่มีรหัสนิสิต (ข้อมูลทดสอบ) ถาวร",async()=>{try{const j=await api({op:"purgeNoSid"});msg("pmsg","ลบแล้ว "+j.removed+" แถว",1);load()}catch(e){msg("pmsg","ลบไม่ได้",0)}});
+$("season").onclick=()=>confirmBox("ล้างกระดานอันดับสำหรับทุกคน ข้อมูลรอบเก่าจะไม่แสดงอีก",async()=>{try{const r=await fetch(SHEET_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"season",key:KEY})});const j=await r.json();if(!j.ok)throw 0;msg("smsg","เริ่มรอบใหม่แล้ว",1);load()}catch(e){msg("smsg","ทำไม่ได้",0)}});
+$("lf").onsubmit=async e=>{e.preventDefault();KEY=$("key").value;msg("lmsg","กำลังตรวจ...",1);
+  try{await load();try{sessionStorage.setItem("cn-admin",KEY)}catch(x){}$("login").hidden=true;$("app").hidden=false;msg("lmsg","",1)}catch(x){msg("lmsg",x.message==="bad key"?"รหัสครูไม่ถูกต้อง":"เชื่อมต่อไม่ได้ (ต้องลง Code.gs v3 และ Deploy ก่อน)",0)}};
+buildChs();
+if(KEY){load().then(()=>{$("login").hidden=true;$("app").hidden=false}).catch(()=>{})}
+</script></body></html>
