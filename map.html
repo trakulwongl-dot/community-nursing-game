@@ -30,6 +30,7 @@ svg{display:block;width:100%;height:auto}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid var(--line);vertical-align:-1px;margin-right:5px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}.chip{font-size:12.5px;font-weight:600;border:2px solid var(--line);border-radius:999px;padding:0 10px;background:var(--soft)}
 .chip.live{background:var(--sun);color:#23323b}.chip.done{background:var(--leaf);color:#fff;border-color:var(--leaf)}.chip.lock{border-style:dashed;background:transparent;color:var(--muted)}.chip.team{background:var(--sea);color:#fff;border-color:var(--sea)}
+.gbtns{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}.gb{font:600 14.5px var(--fb);border:2.5px solid var(--line);border-radius:12px;padding:8px 6px;background:var(--surface);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--line)}.gb small{display:block;font-weight:500;color:var(--muted)}.gb.me{background:var(--leaf);color:#fff}.gb.me small{color:#fff}.gb:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
 table{width:100%;border-collapse:collapse;font-size:14.5px}td{padding:5px 4px;border-bottom:1.5px dashed var(--path)}td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
 .bar{height:10px;border:2px solid var(--line);border-radius:8px;background:var(--soft);overflow:hidden}.bar i{display:block;height:100%;background:var(--leaf)}
 :focus-visible{outline:3px solid var(--sea);outline-offset:2px}[hidden]{display:none!important}
@@ -46,6 +47,14 @@ table{width:100%;border-collapse:collapse;font-size:14.5px}td{padding:5px 4px;bo
   <form class="row" id="lf"><label class="note" for="sid">รหัสนิสิต</label><input id="sid" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="เช่น 66010xxx"><button class="btn" type="submit">ดูความคืบหน้าของฉัน</button></form>
   <div class="msg err" id="lmsg" hidden></div>
   <div class="note">ไม่กรอกรหัสก็ดูแผนที่รวมได้ ระบบใช้รหัสนิสิตเพื่อแสดงความคืบหน้าและคะแนนมีส่วนร่วมของคุณเท่านั้น คนอื่นไม่เห็น</div>
+</section>
+
+<section class="card" id="grp" hidden>
+  <h2 id="gname">กลุ่มของฉัน</h2>
+  <div class="note" id="att"></div>
+  <div class="note" id="ghint"></div>
+  <div class="gbtns" id="gbtns"></div>
+  <div class="msg err" id="gmsg" hidden></div>
 </section>
 
 <section aria-label="แผนที่">
@@ -126,6 +135,24 @@ function pick(i){sel=i;draw();const n=N[i],s=stateOf(n),el=$("detail");el.innerH
   else if(n.href&&(s==="live"||s==="done")){const q=ME&&ME.m[n.m];if(q)add("p",`ดาวที่ดีที่สุด ${"★".repeat(q.best)}${"☆".repeat(3-q.best)} · ส่งแล้ว ${q.attempts} ครั้ง`,"note");const w=document.createElement("div"),a=document.createElement("a");a.className="btn";a.href=n.href;a.textContent=q?"ทำอีกครั้ง":"เริ่มภารกิจ";w.appendChild(a);el.appendChild(w)}
   else if(s==="live")add("p","ครูเปิดป้ายนี้แล้ว ทำภารกิจตามที่ครูบอกในชั่วโมงเรียน (ระบบบันทึกคะแนนของป้ายนี้ยังอยู่ระหว่างพัฒนา)","note");
 }
+function grpDraw(){
+  if(!ME){$("grp").hidden=true;return}
+  $("grp").hidden=false;const g=ME.gr||{n:7,max:8,lock:false,counts:{}},mine=ME.group||"";
+  $("gname").textContent=(ME.name?ME.name+" · ":"")+(mine?"กลุ่ม "+mine:"ยังไม่ได้เลือกกลุ่ม");
+  const a=ME.att,per=k=>a&&a.today?(a.today[k]||(a.open&&a.open[k]?"–":"")):"";
+  const parts=[];if(a&&(a.open.am||a.today.am))parts.push("เช้า "+(a.today.am||"–"));if(a&&(a.open.pm||a.today.pm))parts.push("บ่าย "+(a.today.pm||"–"));
+  $("att").textContent=a?(parts.length?"เช็กชื่อวันนี้: "+parts.join(" · ")+" · ":"")+"มาเรียนแล้ว "+a.present+" คาบ"+(a.leave?" · ลา "+a.leave+" คาบ":""):"";
+  $("ghint").textContent=g.lock?"ครูล็อกการเลือกกลุ่มแล้ว หากต้องการย้ายให้แจ้งอาจารย์":`เลือกกลุ่มของคุณ (กลุ่มละไม่เกิน ${g.max} คน) เปลี่ยนได้จนกว่าครูจะล็อก`;
+  const box=$("gbtns");box.innerHTML="";
+  for(let k=1;k<=g.n;k++){const c=g.counts[k]||0,own=String(k)===mine,b=document.createElement("button");b.type="button";b.className="gb"+(own?" me":"");
+    b.disabled=g.lock||(!own&&c>=g.max);b.innerHTML="";b.appendChild(document.createTextNode("กลุ่ม "+k));const s=document.createElement("small");s.textContent=c+"/"+g.max+" คน"+(c>=g.max&&!own?" เต็ม":"");b.appendChild(s);
+    b.onclick=()=>joinGroup(k);box.appendChild(b)}}
+async function joinGroup(k){const m=$("gmsg");m.hidden=true;
+  try{const r=await fetch(SHEET_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"joinGroup",sid:ME.sid,group:k})}),j=await r.json();
+    if(!j.ok)throw new Error(j.error||"fail");
+    ME.group=j.group;ME.gr=j.groups;ME.hh=j.hh;grpDraw();pick(sel);part()}
+  catch(x){m.textContent=x.message==="full"?"กลุ่มนี้เต็มแล้ว เลือกกลุ่มอื่น":x.message==="locked"?"ครูล็อกการเลือกกลุ่มแล้ว":"บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง";m.hidden=false;
+    try{const r2=await fetch(SHEET_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"login",sid:ME.sid})}),j2=await r2.json();if(j2.ok){ME.group=j2.group;ME.gr=j2.groups;ME.hh=j2.hh;grpDraw()}}catch(e){}}}
 function part(){
   if(!ME){$("part").hidden=true;return}
   $("part").hidden=false;let tot=0;const rows=[];
@@ -140,9 +167,9 @@ async function loadOpen(){try{const r=await fetch(SHEET_URL,{redirect:"follow"})
 $("lf").onsubmit=async e=>{e.preventDefault();const sid=($("sid").value||"").replace(/[^0-9A-Za-z]/g,""),m=$("lmsg");m.hidden=true;if(sid.length<5){m.textContent="กรุณากรอกรหัสนิสิต";m.hidden=false;return}
   try{const r=await fetch(SHEET_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"login",sid})}),j=await r.json();
     if(!j.ok)throw new Error(j.error||"fail");
-    const s=j.saved||{};ME={hh:j.hh||null,lv:Math.min(4,s.lv||0),st:(s.stars||[]).reduce((a,b)=>a+(b||0),0),m:j.missions||{}};
+    const s=j.saved||{};ME={sid,name:j.name||"",group:j.group||"",gr:j.groups||null,att:j.att||null,hh:j.hh||null,lv:Math.min(4,s.lv||0),st:(s.stars||[]).reduce((a,b)=>a+(b||0),0),m:j.missions||{}};
     try{sessionStorage.setItem("cn-sid",sid)}catch(x){}
-    $("login").hidden=true;const cur=current();sel=cur<0?0:cur;draw();pick(sel);part();
+    $("login").hidden=true;grpDraw();const cur=current();sel=cur<0?0:cur;draw();pick(sel);part();
   }catch(x){m.textContent=x.message==="not_in_roster"?"ไม่พบรหัสนิสิตนี้ในรายชื่อรายวิชา ตรวจรหัสอีกครั้งหรือแจ้งอาจารย์":"เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง";m.hidden=false}};
 loadOpen().then(()=>{draw();pick(Math.max(0,current()))});
 draw();pick(0);
