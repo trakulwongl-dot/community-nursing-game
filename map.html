@@ -40,7 +40,7 @@ table{width:100%;border-collapse:collapse;font-size:14.5px}td{padding:5px 4px;bo
   <div class="tag">10130364 การพยาบาลชุมชน 2</div>
   <h1>แผนที่เส้นทางพยาบาลชุมชน</h1>
   <p class="note">กรอกรหัสนิสิตเพื่อดูว่าคุณเดินทางมาถึงป้ายไหนแล้ว ป้ายที่ครูเปิดตามชั่วโมงสอนจะขึ้นสีเหลือง</p>
-  <div class="row"><a class="btn" href="index.html">เล่นเกมบทที่ 1 ▶</a><a class="btn alt" href="leaderboard.html">กระดานอันดับ</a></div>
+  <div class="row"><a class="btn" href="game.html">เล่นเกมบทที่ 1 ▶</a><a class="btn alt" href="leaderboard.html">กระดานอันดับ</a></div>
 </header>
 
 <section class="card" id="login">
@@ -138,7 +138,7 @@ function pick(i){sel=i;draw();const n=N[i],s=stateOf(n),el=$("detail");el.innerH
   const ch=document.createElement("div");ch.className="chips";
   [[n.w,n.w==="ทีม"?"chip team":"chip"],[s==="done"?"ผ่านแล้ว":s==="live"?"เปิดแล้ว":"ยังไม่เปิด","chip "+s],[n.teacher?"ครูให้คะแนน":"ตรวจอัตโนมัติ","chip"]].forEach(c=>{const x=document.createElement("span");x.className=c[1];x.textContent=c[0];ch.appendChild(x)});
   el.appendChild(ch);add("p",n.d,"note");
-  if(n.game){if(ME)add("p",`ด่านที่ผ่าน ${ME.lv}/4 · ดาว ${ME.st}/12`,"note");const w=document.createElement("div"),a=document.createElement("a");a.className="btn";a.href="index.html";a.textContent="เข้าเกม";w.appendChild(a);el.appendChild(w)}
+  if(n.game){if(ME)add("p",`ด่านที่ผ่าน ${ME.lv}/4 · ดาว ${ME.st}/12`,"note");const w=document.createElement("div"),a=document.createElement("a");a.className="btn";a.href="game.html";a.textContent="เข้าเกม";w.appendChild(a);el.appendChild(w)}
   else if(n.m==="ch2-dummy"){
     if(!ME)return;const g=ME.group,gt=GT[g];
     if(!g){add("p","เลือกกลุ่มของคุณที่การ์ดด้านบนก่อน แล้วจะเห็นชุดตารางที่กลุ่มต้องออกแบบ","note");return}
