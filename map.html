@@ -81,7 +81,7 @@ const CHS=["","บทที่ 1 แนวคิดสำคัญ","บทท�
 const COL={1:"var(--leaf)",2:"var(--sea)",3:"var(--sun)",4:"var(--rose)",5:"#8a6bd1"};
 const N=[
  {c:1,t:"ผจญภัยหมู่บ้านสุขใจ",w:"เดี่ยว",d:"เกม 4 ด่าน เดินสำรวจหมู่บ้านและตอบคำถามแนวคิดพยาบาลชุมชน มีเกมในระบบแล้ว",game:1},
- {c:2,t:"ออกแบบ Dummy table",w:"ทีม",m:"ch2-dummy",teacher:1,d:"แต่ละกลุ่มรับผิดชอบออกแบบตารางเปล่าคนละชุด (แบ่งกันทำเพื่อประหยัดเวลา) ใน Google Doc แล้วแปะลิงก์เอกสารที่นี่ อาจารย์จะเข้าไปตรวจและให้ดาว หลังเก็บข้อมูลทุกกลุ่มจะนำตารางไปเติมข้อมูลของกลุ่มตัวเอง"},
+ {c:2,t:"ออกแบบ Dummy table",w:"ทีม",m:"ch2-dummy",teacher:1,d:"แต่ละกลุ่มรับผิดชอบออกแบบตารางเปล่าคนละชุด (แบ่งกันทำเพื่อประหยัดเวลา) ใน Google Doc ในเอกสารกลางของห้อง แล้วกดแจ้งครู อาจารย์จะเข้าไปตรวจและให้ดาว หลังเก็บข้อมูลทุกกลุ่มจะนำตารางไปเติมข้อมูลของกลุ่มตัวเอง"},
  {c:2,t:"เก็บข้อมูลครัวเรือน",w:"ทีม",m:"ch2-collect",d:"กลุ่มลงพื้นที่เก็บข้อมูลครัวเรือน ระบบนับจำนวนหลังจากแอปเก็บข้อมูลให้อัตโนมัติ โควตา 3 หลังต่อคน กลุ่มที่เก็บเกินโควตาได้โบนัส"},
  {c:2,t:"จัดเรียงข้อวินิจฉัย",w:"เดี่ยว",m:"ch2-diag",href:"diagnosis.html",d:"เรียงองค์ประกอบของข้อวินิจฉัยการพยาบาลชุมชนให้ถูกต้อง"},
  {c:2,t:"จัดลำดับปัญหา",w:"ทีม",d:"ให้คะแนนปัญหาตามเกณฑ์ ขนาด ความรุนแรง ความยากง่าย แล้วจัดลำดับความสำคัญ"},
@@ -125,10 +125,11 @@ function draw(){
   });
   if(ME&&cur>=0){const n=N[cur],g=h("g",{},svg);h("rect",{x:n.x-34,y:n.y-50,width:68,height:20,rx:10,fill:"var(--rose)",stroke:"var(--line)","stroke-width":2},g);h("path",{d:`M${n.x-6} ${n.y-31} L${n.x} ${n.y-22} L${n.x+6} ${n.y-31} Z`,fill:"var(--rose)",stroke:"var(--line)","stroke-width":2,"stroke-linejoin":"round"},g);const t=h("text",{"class":"you",x:n.x,y:n.y-36},g);t.textContent="คุณอยู่ที่นี่"}
 }
+const DOC_URL="https://docs.google.com/document/d/1iMagGM2b1ksSVGMOZ1fp4rzfe4h4dCj8NCPyw28kRYA/edit?tab=t.0";
 const GT={1:["กายภาพ","ph1–ph5"],2:["ชีวกายภาพ","bio1–bio3"],3:["สังคม","so1–so3"],4:["จิตวิทยา","ps1–ps4"],5:["พฤติกรรม ก (ครัวเรือน)","bh1–bh3"],6:["พฤติกรรม ข (อายุ ≥15 ปี)","bh4–bh6"],7:["บริการ","sv1–sv2"]};
-async function sendLink(){const m=$("lkmsg"),v=$("lkin").value.trim();m.hidden=false;m.textContent="กำลังส่ง…";
-  try{const r=await fetch(SHEET_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"submitLink",sid:ME.sid,link:v})}),j=await r.json();
-    if(!j.ok)throw new Error(j.error||"fail");ME.gw=j.gw;m.textContent="ส่งลิงก์แล้ว รออาจารย์ตรวจ";pick(sel)}
+async function sendLink(){const m=$("lkmsg");m.hidden=false;m.textContent="กำลังส่ง…";
+  try{const r=await fetch(SHEET_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"submitLink",sid:ME.sid,link:DOC_URL})}),j=await r.json();
+    if(!j.ok)throw new Error(j.error||"fail");ME.gw=j.gw;m.textContent="แจ้งอาจารย์แล้ว รออาจารย์ตรวจ";pick(sel)}
   catch(x){const e=x.message;m.textContent=e==="bad_link"?"ลิงก์ไม่ถูกต้อง ต้องเป็นลิงก์ Google Doc (docs.google.com/document/…)":e==="no_group"?"เลือกกลุ่มก่อน":e==="closed"?"ครูยังไม่เปิดบทนี้":"ส่งไม่สำเร็จ ลองใหม่"}}
 function pick(i){sel=i;draw();const n=N[i],s=stateOf(n),el=$("detail");el.innerHTML="";
   const add=(tag,txt,cls)=>{const e=document.createElement(tag);if(cls)e.className=cls;e.textContent=txt;el.appendChild(e);return e};
@@ -142,10 +143,10 @@ function pick(i){sel=i;draw();const n=N[i],s=stateOf(n),el=$("detail");el.innerH
     if(!g){add("p","เลือกกลุ่มของคุณที่การ์ดด้านบนก่อน แล้วจะเห็นชุดตารางที่กลุ่มต้องออกแบบ","note");return}
     add("p",`กลุ่ม ${g} รับผิดชอบตาราง: ${gt?gt[0]+" ("+gt[1]+")":"ตามที่อาจารย์กำหนด"}`,"note");
     const w=ME.gw;
-    if(w&&w.link){const a=add("p","","note");a.appendChild(document.createTextNode("ลิงก์ที่ส่งแล้ว: "));const l=document.createElement("a");l.href=w.link;l.target="_blank";l.rel="noopener";l.textContent="เปิดเอกสาร";a.appendChild(l);
-      add("p",w.stars>=0?`ผลตรวจ ${"★".repeat(w.stars)}${"☆".repeat(3-w.stars)}`+(w.note?` · ${w.note}`:""):"รออาจารย์ตรวจ","note")}
-    if(s!=="locked"){const f=document.createElement("div");f.innerHTML='<input id="lkin" type="url" placeholder="วางลิงก์ Google Doc ของกลุ่ม" style="width:100%;padding:8px;border:2px solid var(--line);border-radius:10px;font:inherit"><button class="btn" type="button" id="lkbtn" style="margin-top:8px">ส่งลิงก์</button><p class="note" id="lkmsg" hidden></p>';el.appendChild(f);$("lkbtn").onclick=sendLink;if(w&&w.link)$("lkin").value=w.link;
-      add("p","ตั้งค่าแชร์เอกสารเป็น “ทุกคนที่มีลิงก์ แก้ไขได้/ดูได้” เพื่อให้อาจารย์เปิดได้ (ส่งซ้ำได้ ลิงก์ล่าสุดคือที่ตรวจ)","note")}
+    const fa=document.createElement("div"),ln=document.createElement("a");ln.className="btn";ln.href=DOC_URL;ln.target="_blank";ln.rel="noopener";ln.textContent="เปิดเอกสาร Dummy table";fa.appendChild(ln);el.appendChild(fa);
+    add("p","ทุกกลุ่มทำในเอกสารเดียวกันนี้ (ทำเฉพาะชุดตารางของกลุ่มตัวเอง ใส่ชื่อกลุ่มกำกับหัวข้อ) และดาวน์โหลดเอกสารไปใช้เติมข้อมูลภายหลังได้","note");
+    if(w&&w.link)add("p",w.stars>=0?`ผลตรวจ ${"★".repeat(w.stars)}${"☆".repeat(3-w.stars)}`+(w.note?` · ${w.note}`:""):"แจ้งครูแล้ว รออาจารย์ตรวจ","note");
+    if(s!=="lock"&&!(w&&w.stars>=0)){const f=document.createElement("div");f.innerHTML='<button class="btn" type="button" id="lkbtn">กลุ่มทำเสร็จแล้ว แจ้งอาจารย์ตรวจ</button><p class="note" id="lkmsg" hidden></p>';el.appendChild(f);$("lkbtn").onclick=sendLink}
   }
   else if(n.m==="ch2-collect"&&ME&&ME.hh){const h=ME.hh;add("p",`กลุ่มของคุณเก็บได้ ${h.count} หลัง จากโควตา ${h.quota} หลัง (${h.members} คน × 3)`+(h.bonus?` · เกินโควตา ได้โบนัส +${h.bonus}`:h.met?" · ครบโควตาแล้ว":""),"note")}
   else if(n.href&&(s==="live"||s==="done")){const q=ME&&ME.m[n.m];if(q)add("p",`ดาวที่ดีที่สุด ${"★".repeat(q.best)}${"☆".repeat(3-q.best)} · ส่งแล้ว ${q.attempts} ครั้ง`,"note");const w=document.createElement("div"),a=document.createElement("a");a.className="btn";a.href=n.href;a.textContent=q?"ทำอีกครั้ง":"เริ่มภารกิจ";w.appendChild(a);el.appendChild(w)}
