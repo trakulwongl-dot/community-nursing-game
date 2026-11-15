@@ -141,7 +141,7 @@ async function loadGW(){const j=await api({op:"gwList"});
 async function load(){
   const j=await api({op:"progress"});DATA=j;
   CHN.forEach((_,i)=>{const s=$("sw"+(i+1));if(s)s.checked=!!j.open[i+1]});
-  if(j.gcfg){$("gn").value=j.gcfg.n;$("gmax").value=j.gcfg.max;$("glock").checked=!!j.gcfg.lock}
+  $("hmsg").textContent=j.hhErr?"อ่านชีตเก็บข้อมูลไม่ได้: "+j.hhErr:"";$("hmsg").className="msg err";if(j.gcfg){$("gn").value=j.gcfg.n;$("gmax").value=j.gcfg.max;$("glock").checked=!!j.gcfg.lock}
   if(j.att){$("atam").checked=!!j.att.open.am;$("atpm").checked=!!j.att.open.pm}
   render();try{await loadAtt()}catch(e){}try{await loadGW()}catch(e){}
   const un=j.rows.filter(r=>!r.group).length;$("gunas").textContent=un?`ยังไม่ได้เลือกกลุ่ม ${un} คน`:"ทุกคนเลือกกลุ่มแล้ว"}
