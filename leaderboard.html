@@ -41,7 +41,7 @@ td svg{width:20px;height:16px;vertical-align:-2px;margin-right:2px}
 #msg{font-size:13px;opacity:.7;text-align:center;margin-top:6px}
 @media(max-width:420px){td{font-size:14px}.pd .s{font-size:17px}}
 </style></head><body><div class="wrap">
-<header><div><h1>กระดานอันดับ</h1><div class="sub" id="sub">กำลังโหลด...</div></div><div><button class="btn" id="rf">รีเฟรช</button> <a class="btn" href="index.html" style="background:#fff">กลับไปเล่น</a></div></header>
+<header><div><h1>กระดานอันดับ</h1><div class="sub" id="sub">กำลังโหลด...</div></div><div><button class="btn" id="rf">รีเฟรช</button> <a class="btn" href="game.html" style="background:#fff">กลับไปเล่น</a> <a class="btn" href="map.html" style="background:#fff">แผนที่</a></div></header>
 <section class="card"><h2>ห้องมงกุฎ ใครได้มงกุฎไหน</h2><div class="crowns" id="crowns"></div></section>
 <section class="card"><h2>ตารางอันดับ</h2><div class="pod" id="pod"></div><div id="tbl"></div></section>
 <div id="msg"></div></div>
@@ -75,8 +75,8 @@ function myCrowns(id){const c=[];crownsOf().forEach(x=>{if(x.r.id===id)c.push(x)
 const rankCol=i=>i===0?COL.g:i===1?COL.s:i===2?COL.b:null;
 function title(i,r){return i===0?"แชมป์ชุมชน":i===1?"รองแชมป์":i===2?"อันดับสาม":r.lv>=4?"ผู้พิชิตหมู่บ้าน":r.lv>0?"พยาบาลชุมชนฝึกหัด":"นักสำรวจหน้าใหม่"}
 function render(){
-  rows.sort((a,b)=>b.net-a.net);
-  $("sub").textContent=rows.length?`ผู้เล่น ${rows.length} คน · อัปเดตอัตโนมัติทุก 10 วินาที`:"ยังไม่มีผู้เล่น";
+  rows.sort((a,b)=>b.net-a.net||b.starN-a.starN||b.lv-a.lv||(a.t||9e15)-(b.t||9e15)||String(a.name||"").localeCompare(String(b.name||""),"th"));
+  $("sub").textContent=rows.length?`ผู้เล่น ${rows.length} คน · อัปเดตอัตโนมัติทุก 10 วินาที · แต้มเท่ากันตัดสินด้วยดาว ด่าน แล้วใครไปถึงก่อน`:"ยังไม่มีผู้เล่น";
   $("crowns").innerHTML=crownsOf().map(x=>`<button class="cw" data-id="${esc(x.r.id)}">${crown(x.c)}<b>${x.name}</b><div class="v">${x.desc}</div><div class="who">${esc(x.r.name||"-")}</div><div class="v">${x.val}</div></button>`).join("")||'<div class="empty">ยังไม่มีมงกุฎ เริ่มเล่นเพื่อชิงมงกุฎได้เลย</div>';
   const top=rows.slice(0,3),order=[1,0,2].filter(i=>top[i]);
   $("pod").innerHTML=order.map(i=>`<button class="pd r${i+1}" data-id="${esc(top[i].id)}">${crown(rankCol(i))}<div class="n">${esc(top[i].name||"-")}</div><div class="s">${top[i].net}</div><div style="font-size:12px;opacity:.7">อันดับ ${i+1}</div></button>`).join("");
