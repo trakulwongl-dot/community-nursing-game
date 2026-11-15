@@ -347,7 +347,7 @@ LEVELS[2].stages.splice(1,0,{type:"match",title:"จับคู่มิติ�
 
 /* ============================ เอนจินเกม ============================ */
 const $=id=>document.getElementById(id);
-const S={inLevel:false,name:"",score:0,progress:0,stars:[0,0,0,0],busy:true,t0:0,quest:"",collecting:null,hp:5,treats:3,shield:2,shT:0,invuln:0,focus:null,drains:{},pen:0,noScore:false,regen:0};
+const S={inLevel:false,name:"",score:0,progress:0,stars:[0,0,0,0],busy:true,t0:0,quest:"",collecting:null,hp:5,treats:3,shield:2,shT:0,invuln:0,focus:null,drains:{},pen:0,wait:0,noScore:false,regen:0};
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 
 /* ---- เสียงและเพลง (สร้างด้วย WebAudio ไม่ใช้ไฟล์เสียง) ---- */
@@ -1080,7 +1080,7 @@ function lossOn(id){let l=0;for(const q of LB)if(q.id!==id&&q.drains&&q.drains[i
 function netOf(p){let g=0;for(const k in(p.drains||{}))g+=p.drains[k].pts||0;const l=Math.min(lossOn(p.id),Math.floor(CAPPCT*(p.score||0)));return Math.max(0,Math.round((p.score||0)+g-l-(p.pen||0)))}
 function myNet(){if(!MYID)return S.score;return netOf({id:MYID,score:S.score,drains:S.drains,pen:S.pen})}
 function save(){if(!MYDOC)return;clearTimeout(saveT);saveT=setTimeout(()=>{
-  MYDOC.set({name:S.name,score:S.score,stars:S.stars,lv:S.progress,drains:S.drains,pen:S.pen,season:SEASON,t:Date.now()}).catch(e=>{if(!saveWarned){saveWarned=true;toast(e&&e.message==="nick_taken"?"ชื่อเล่นนี้มีคนใช้แล้ว โหลดหน้าเกมใหม่แล้วเปลี่ยนชื่อ":"บันทึกคะแนนกลางไม่ได้ (เช็กอินเทอร์เน็ตหรือรหัสนิสิต)")}})},500)}
+  MYDOC.set({name:S.name,score:S.score,stars:S.stars,lv:S.progress,drains:S.drains,pen:S.pen,wait:S.wait||0,season:SEASON,t:Date.now()}).catch(e=>{if(!saveWarned){saveWarned=true;toast(e&&e.message==="nick_taken"?"ชื่อเล่นนี้มีคนใช้แล้ว โหลดหน้าเกมใหม่แล้วเปลี่ยนชื่อ":"บันทึกคะแนนกลางไม่ได้ (เช็กอินเทอร์เน็ตหรือรหัสนิสิต)")}})},500)}
 /* ---- ตัวเชื่อมกระดานคะแนนผ่าน Google Sheets (ใช้เมื่อเปิดนอก Claude เช่น GitHub Pages) ---- */
 const SHEET_URL="https://script.google.com/macros/s/AKfycbx6PC4sfC9m2FEYOionsVGpvt1dclejuPBhh8SOtYy5YIbsthC41O-lohVUwIMjYwGA6g/exec";
 function makeSheetDB(url){
@@ -1112,7 +1112,7 @@ async function initDB(sid){
     const ms=await db.doc("meta/season").get();SEASON=ms.exists&&ms.data().id?String(ms.data().id):"0";
     if(!SUBD){SUBD=true;
     db.doc("meta/season").onSnapshot(sn=>{const n=sn.exists&&sn.data().id?String(sn.data().id):"0";if(n!==SEASON&&MYDOC){SEASON=n;toast("ผู้สอนเริ่มรอบใหม่แล้ว โหลดหน้าเกมใหม่เพื่อเริ่มต้น");LB=[]}},()=>{});
-    db.collection("players").onSnapshot(sn=>{LBALL=sn.docs.map(d=>Object.assign({id:d.id},d.data()));LB=LBALL.filter(r=>(r.season||"0")===SEASON);updateHud()},()=>{});}
+    db.collection("players").onSnapshot(sn=>{LBALL=sn.docs.map(d=>Object.assign({id:d.id},d.data()));LB=LBALL.filter(r=>(r.season||"0")===SEASON);updateHud();notifyLoss()},()=>{});}
     $("lbbtn").hidden=false;
     const sn=await MYDOC.get();const d=sn.exists?sn.data():null;return d&&(d.season||"0")===SEASON?d:null;
   }catch(e){LOGERR=(e&&e.message)||"net";DB=null;MYDOC=null;MYID=null;return null}}
@@ -1122,14 +1122,36 @@ async function openLB(){
     const rows=LB.map(r=>Object.assign({},r,{net:netOf(r)})).sort((a,b)=>b.net-a.net);
     let h=`<div class="tag">กระดานอันดับ · ${rows.length} คน</div><h2>ใครคือพยาบาลชุมชนอันดับ 1</h2><div class="lbw"><table><tr><th>#</th><th>ชื่อ</th><th>แต้ม</th><th>ดาว</th><th></th></tr>`;
     rows.slice(0,40).forEach((r,i)=>{const me=r.id===MYID,st=(r.stars||[]).reduce((a,b)=>a+b,0),cd=S.drains[r.id]&&Date.now()-S.drains[r.id].t<COOLDOWN;
-      h+=`<tr class="${me?"me":""}"><td>${i+1}</td><td>${i<3?CRW(CRC[i]):""}${esc(r.name||"-")}${me?" (คุณ)":""}</td><td>${r.net}</td><td>${st}/12</td><td>${me||!(r.lv>0)?"":`<button class="btn sm" data-d="${esc(r.id)}" ${cd?"disabled":""}>${cd?"รอก่อน":"ท้าดวล"}</button>`}</td></tr>`});
-    h+=`</table></div><div class="exp">ท้าดวลชนะ (ตอบถูก 2 จาก 3 ข้อ) จะสูบแต้มจากเพื่อนได้ครั้งละไม่เกิน ${STEAL} แต้ม เพื่อนเสียได้ไม่เกิน 40% ของแต้มที่เขาหามาเอง แพ้เสีย ${PENALTY} แต้ม ท้าคนเดิมซ้ำได้ทุก 20 นาที</div><div class="btns">${OWNER?'<button class="btn alt" id="rst">เริ่มรอบใหม่ (ผู้สอน)</button>':""}<button class="btn alt" id="rf">รีเฟรช</button>${(SHEET_URL&&!(window.claude&&window.claude.use))?'<a class="btn alt" href="leaderboard.html" target="_blank" rel="noopener" style="text-decoration:none">หน้าอันดับเต็ม + มงกุฎ</a>':""}<button class="btn" id="cl">ปิด</button></div>`;
+      h+=`<tr class="${me?"me":""}"><td>${i+1}</td><td>${i<3?CRW(CRC[i]):""}${esc(r.name||"-")}${me?" (คุณ)":""}</td><td>${r.net}</td><td>${st}/12</td><td>${isWait(r)?"<span class=\"exp\" style=\"padding:1px 6px\">รอดวล</span>":""}</td></tr>`});
+    h+=`</table></div><div class="exp">อยากดวลกับเพื่อน? เข้า “ห้องดวล” แล้วเลือกคู่ต่อสู้จากคนที่รออยู่ในห้อง คนที่ไม่ได้เข้าห้องจะไม่ถูกท้า</div><div class="btns"><button class="btn" id="lob">⚔ ห้องดวล</button>${OWNER?'<button class="btn alt" id="rst">เริ่มรอบใหม่ (ผู้สอน)</button>':""}<button class="btn alt" id="rf">รีเฟรช</button>${(SHEET_URL&&!(window.claude&&window.claude.use))?'<a class="btn alt" href="leaderboard.html" target="_blank" rel="noopener" style="text-decoration:none">หน้าอันดับเต็ม + มงกุฎ</a>':""}<button class="btn" id="cl">ปิด</button></div>`;
     show(h);
-    const a=await new Promise(res=>{panel.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>res({d:b.dataset.d}));$("cl").onclick=()=>res({c:1});$("rf").onclick=()=>res({});const r=$("rst");if(r)r.onclick=()=>res({rst:1})});
+    const a=await new Promise(res=>{panel.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>res({d:b.dataset.d}));$("cl").onclick=()=>res({c:1});$("rf").onclick=()=>res({});$("lob").onclick=()=>res({lob:1});const r=$("rst");if(r)r.onclick=()=>res({rst:1})});
     if(a.c){hide();return}
-    if(a.d){const t=rows.find(r=>r.id===a.d);if(t)await duel(t);continue}
+    if(a.lob){await openLobby();continue}
     if(a.rst){const k=await ask('<h3>เริ่มรอบใหม่?</h3><div>กระดานอันดับจะถูกล้างสำหรับทุกคน ข้อมูลรอบเก่าจะไม่แสดงอีก ทำได้เฉพาะผู้สอนเจ้าของเกม</div>',[{t:"ยืนยัน เริ่มรอบใหม่"},{t:"ยกเลิก",alt:1}]);
       if(k===0){try{await DB.doc("meta/season").set({id:String(Date.now())});LB=[];SEASON="x";toast("เริ่มรอบใหม่แล้ว")}catch(e){toast("ทำไม่ได้ ต้องเป็นเจ้าของเกม")}}}
+  }}
+const WAITMS=150000;
+function isWait(r){return !!(r&&r.id!==MYID&&r.wait&&Date.now()-r.wait<WAITMS&&(r.season||"0")===SEASON)}
+setInterval(()=>{if(S.wait){S.wait=Date.now();save()}},45000);
+let lastLoss=null;
+function notifyLoss(){if(!MYID)return;const l=lossOn(MYID);if(lastLoss!==null&&l>lastLoss)toast("มีเพื่อนท้าดวลและชนะคุณ เสีย "+(l-lastLoss)+" แต้ม");lastLoss=l}
+async function openLobby(){
+  for(;;){
+    const inRoom=!!S.wait,list=LB.filter(r=>isWait(r)&&r.lv>0).map(r=>Object.assign({},r,{net:netOf(r)})).sort((a,b)=>b.net-a.net);
+    let h=`<div class="tag">ห้องดวล · รอดวลอยู่ ${list.length+(inRoom?1:0)} คน</div><h2>เลือกคู่ต่อสู้</h2>`;
+    h+=inRoom?`<div class="exp">คุณอยู่ในห้องดวลแล้ว เพื่อนในห้องท้าคุณได้ และคุณเลือกท้าคนในห้องได้</div>`:`<div class="exp">เข้าห้องก่อนจึงจะท้าคนอื่นได้ และเมื่อเข้าห้อง เพื่อนในห้องจะท้าคุณได้ด้วย ออกจากห้องเมื่อไรก็ได้</div>`;
+    h+=`<div class="lbw"><table><tr><th>ชื่อ</th><th>แต้ม</th><th>ดาว</th><th></th></tr>`;
+    list.forEach(r=>{const st=(r.stars||[]).reduce((a,b)=>a+b,0),cd=S.drains[r.id]&&Date.now()-S.drains[r.id].t<COOLDOWN;
+      h+=`<tr><td>${esc(r.name||"-")}</td><td>${r.net}</td><td>${st}/12</td><td><button class="btn sm" data-d="${esc(r.id)}" ${!inRoom||cd?"disabled":""}>${cd?"รอก่อน":"ท้าดวล"}</button></td></tr>`});
+    if(!list.length)h+=`<tr><td colspan="4" style="text-align:center;opacity:.7">ยังไม่มีใครรออยู่ในห้อง</td></tr>`;
+    h+=`</table></div><div class="exp">ชนะ (ถูก 2 จาก 3 ข้อ) สูบแต้มได้ครั้งละไม่เกิน ${STEAL} แต้ม เพื่อนเสียได้ไม่เกิน 40% ของแต้มที่เขาหามาเอง แพ้เสีย ${PENALTY} แต้ม ท้าคนเดิมซ้ำได้ทุก 20 นาที แต้มดวลมีผลแค่อันดับเกม ไม่เกี่ยวกับคะแนนวิชา</div><div class="btns"><button class="btn ${inRoom?"alt":""}" id="jr">${inRoom?"ออกจากห้อง":"เข้าห้องดวล"}</button><button class="btn alt" id="bk">กลับ</button></div>`;
+    show(h);let tm=null;
+    const a=await new Promise(res=>{panel.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>res({d:b.dataset.d}));$("jr").onclick=()=>res({j:1});$("bk").onclick=()=>res({c:1});tm=setTimeout(()=>res({}),6000)});
+    clearTimeout(tm);
+    if(a.c)return;
+    if(a.j){S.wait=S.wait?0:Date.now();save();continue}
+    if(a.d&&S.wait){const t=LB.find(r=>r.id===a.d);if(t&&isWait(t))await duel(t);else toast("คนนี้ออกจากห้องไปแล้ว");continue}
   }}
 function duelPool(){return LEVELS.flatMap(l=>l.stages).filter(st=>st.type==="choice"&&!st.fixedOpts).flatMap(st=>st.items)}
 async function duel(t){
