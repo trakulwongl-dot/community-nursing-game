@@ -76,6 +76,7 @@ tr.no td{color:var(--muted);background:#fbf6ea}
     <div class="chs"><label class="ch"><span>ล็อกการเลือกกลุ่ม</span><input type="checkbox" class="sw" id="glock" aria-label="ล็อกการเลือกกลุ่ม"></label></div>
     <div class="row"><button class="btn" id="saveG">บันทึกการตั้งค่ากลุ่ม</button><span class="msg" id="gmsg2"></span></div>
     <div class="note" id="gunas"></div>
+    <div class="row"><button class="btn alt" id="autoA">จัดกลุ่มอัตโนมัติให้คนที่ยังไม่เลือก</button><span class="msg" id="gmsg3"></span></div>
   </section>
 
   <section class="card">
@@ -185,6 +186,7 @@ $("saveAtt").onclick=async()=>{try{await api({op:"setAttOpen",am:$("atam").check
 $("attcsv").onclick=async()=>{try{const j=await api({op:"attAll"}),by={};DATA.rows.forEach(r=>by[r.sid]=r);const q=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
   const lines=[["วันที่","รหัสนิสิต","ชื่อ-สกุล","กลุ่ม","คาบ","สถานะ","หมายเหตุ","แหล่งที่มา"].map(q).join(",")].concat(j.rows.map(r=>[r[0],r[1],(by[r[1]]||{}).name||"",(by[r[1]]||{}).group||"",r[2],r[3],r[4],r[5]].map(q).join(",")));
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="attendance.csv";document.body.appendChild(a);a.click();a.remove()}catch(e){msg("amsg","ส่งออกไม่ได้",0)}};
+$("autoA").onclick=async()=>{if(!confirm("จัดคนที่ยังไม่มีกลุ่มเข้ากลุ่มที่ว่างที่สุดตอนนี้เลยหรือไม่"))return;try{const r=await api({op:"autoAssign"});msg("gmsg3","จัดแล้ว "+r.assigned+" คน"+(r.left?" · เหลือ "+r.left+" คน (กลุ่มเต็ม)":""),1);await load()}catch(e){msg("gmsg3","จัดไม่สำเร็จ",0)}};
 $("saveG").onclick=async()=>{try{await api({op:"groupCfg",n:$("gn").value,max:$("gmax").value,lock:$("glock").checked});msg("gmsg2","บันทึกแล้ว",1);await load()}catch(e){msg("gmsg2","บันทึกไม่สำเร็จ",0)}};
 $("tb").addEventListener("change",async e=>{const t=e.target;if(!t.classList.contains("gsel"))return;try{await api({op:"setGroup",sid:t.dataset.sid,group:t.value});await load()}catch(x){msg("gmsg2","ย้ายกลุ่มไม่สำเร็จ",0)}});
 function table(){
