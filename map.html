@@ -63,6 +63,7 @@ table{width:100%;border-collapse:collapse;font-size:14.5px}td{padding:5px 4px;bo
   <div class="note" id="ghint"></div>
   <div class="gbtns" id="gbtns"></div>
   <div class="msg err" id="gmsg" hidden></div>
+  <button class="btn alt" type="button" id="gauto" hidden>เลือกกลุ่มไม่ได้? ให้ระบบเลือกกลุ่มที่ว่างให้</button>
   <div><button class="btn alt" id="lo" type="button">ไม่ใช่ฉัน / เปลี่ยนรหัสนิสิต</button></div>
 </section>
 
@@ -84,6 +85,7 @@ table{width:100%;border-collapse:collapse;font-size:14.5px}td{padding:5px 4px;bo
 <script>
 "use strict";
 const SHEET_URL="https://script.google.com/macros/s/AKfycbx6PC4sfC9m2FEYOionsVGpvt1dclejuPBhh8SOtYy5YIbsthC41O-lohVUwIMjYwGA6g/exec";
+async function postJ(o){let last;for(let t=0;t<4;t++){try{const r=await fetch(SHEET_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(o)}),j=await r.json();if(!(j&&j.error==="busy"))return j;last=new Error("busy")}catch(e){last=e}await new Promise(r=>setTimeout(r,1200*(t+1)+Math.random()*1500))}throw last||new Error("busy")}
 const $=id=>document.getElementById(id);
 const CHS=["","บทที่ 1 แนวคิดสำคัญ","บทที่ 2 ประเมินและวินิจฉัย","บทที่ 3 วางแผน","บทที่ 4 ประเมินผล","บทที่ 5 ยาและวัฒนธรรม"];
 const COL={1:"var(--leaf)",2:"var(--sea)",3:"var(--sun)",4:"var(--rose)",5:"#8a6bd1"};
@@ -157,7 +159,7 @@ const COLLECT_URL="https://script.google.com/macros/s/AKfycbwNZg3y8o0rIvcGZSSa0n
 const DOC_URL="https://docs.google.com/document/d/1iMagGM2b1ksSVGMOZ1fp4rzfe4h4dCj8NCPyw28kRYA/edit?tab=t.0";
 const GT={1:["กายภาพ","ph1–ph5"],2:["ชีวกายภาพ","bio1–bio3"],3:["สังคม","so1–so3"],4:["จิตวิทยา","ps1–ps4"],5:["พฤติกรรม ก (ครัวเรือน)","bh1–bh3"],6:["พฤติกรรม ข (อายุ ≥15 ปี)","bh4–bh6"],7:["บริการ","sv1–sv2"]};
 async function sendLink(){const m=$("lkmsg");m.hidden=false;m.textContent="กำลังส่ง…";
-  try{const r=await fetch(SHEET_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"submitLink",sid:ME.sid,link:DOC_URL})}),j=await r.json();
+  try{const j=await postJ({action:"submitLink",sid:ME.sid,link:DOC_URL});
     if(!j.ok)throw new Error(j.error||"fail");ME.gw=j.gw;m.textContent="แจ้งอาจารย์แล้ว รออาจารย์ตรวจ";pick(sel)}
   catch(x){const e=x.message;m.textContent=e==="bad_link"?"ลิงก์ไม่ถูกต้อง ต้องเป็นลิงก์ Google Doc (docs.google.com/document/…)":e==="no_group"?"เลือกกลุ่มก่อน":e==="closed"?"ครูยังไม่เปิดบทนี้":"ส่งไม่สำเร็จ ลองใหม่"}}
 function closeM(){$("modal").hidden=true}
@@ -193,13 +195,18 @@ function grpDraw(){
   const box=$("gbtns");box.innerHTML="";
   for(let k=1;k<=g.n;k++){const c=g.counts[k]||0,own=String(k)===mine,b=document.createElement("button");b.type="button";b.className="gb"+(own?" me":"");
     b.disabled=g.lock||(!own&&c>=g.max);b.innerHTML="";b.appendChild(document.createTextNode("กลุ่ม "+k));const s=document.createElement("small");s.textContent=c+"/"+g.max+" คน"+(c>=g.max&&!own?" เต็ม":"");b.appendChild(s);
-    b.onclick=()=>joinGroup(k);box.appendChild(b)}}
-async function joinGroup(k){const m=$("gmsg");m.hidden=true;
-  try{const r=await fetch(SHEET_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"joinGroup",sid:ME.sid,group:k})}),j=await r.json();
+    b.onclick=()=>joinGroup(k);box.appendChild(b)}
+  $("gauto").hidden=!!mine||g.lock;$("gauto").onclick=()=>joinGroup(0,true)}
+let GBUSY=false;
+function gset(b){GBUSY=b;document.querySelectorAll(".gb").forEach(x=>{if(b)x.dataset.d=x.disabled?"1":"0",x.disabled=true;else if(x.dataset.d!==undefined){x.disabled=x.dataset.d==="1";delete x.dataset.d}});$("gauto").disabled=b}
+function gerr(x){const e=x&&x.message;return e==="full"?"กลุ่มนี้เต็มแล้ว เลือกกลุ่มอื่น":e==="locked"?"ครูล็อกการเลือกกลุ่มแล้ว":"ระบบกำลังหนาแน่น กดเลือกอีกครั้ง หรือกดปุ่มให้ระบบเลือกให้"}
+async function joinGroup(k,auto){if(GBUSY)return;const m=$("gmsg");m.hidden=false;m.className="msg";m.textContent="กำลังบันทึกกลุ่ม… (ถ้าช้า ระบบจะลองให้อัตโนมัติ)";gset(true);
+  try{const j=await postJ(auto?{action:"autoGroup",sid:ME.sid}:{action:"joinGroup",sid:ME.sid,group:k});
     if(!j.ok)throw new Error(j.error||"fail");
-    ME.group=j.group;ME.gr=j.groups;ME.hh=j.hh;grpDraw();pick(sel,true);part()}
-  catch(x){m.textContent=x.message==="full"?"กลุ่มนี้เต็มแล้ว เลือกกลุ่มอื่น":x.message==="locked"?"ครูล็อกการเลือกกลุ่มแล้ว":"บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง";m.hidden=false;
-    try{const r2=await fetch(SHEET_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"login",sid:ME.sid})}),j2=await r2.json();if(j2.ok){ME.group=j2.group;ME.gr=j2.groups;ME.hh=j2.hh;grpDraw()}}catch(e){}}}
+    ME.group=j.group;ME.gr=j.groups;ME.hh=j.hh;m.hidden=true;gset(false);grpDraw();pick(sel,true);part();return}
+  catch(x){m.className="msg err";m.textContent=gerr(x);m.hidden=false;gset(false);await refreshGroups()}}
+async function refreshGroups(){if(!ME||GBUSY)return;try{const j=await postJ({action:"groups",sid:ME.sid});if(j.ok){ME.gr=j.groups;if(j.group!==ME.group){ME.group=j.group;pick(sel,true);part()}grpDraw()}}catch(e){}}
+(function gtick(){setTimeout(()=>{if(ME&&!document.hidden&&!(ME.gr&&ME.gr.lock))refreshGroups();gtick()},12000+Math.random()*5000)})();
 function part(){
   if(!ME){$("part").hidden=true;return}
   $("part").hidden=false;let tot=0;const rows=[];
@@ -212,7 +219,7 @@ function part(){
   $("pt").innerHTML=rows.join("");$("ptot").textContent=tot.toFixed(2)+" / 5";$("pbar").style.width=(tot/5*100)+"%"}
 async function loadOpen(){try{const r=await fetch(SHEET_URL,{redirect:"follow"}),j=await r.json();if(j&&j.ok&&j.open){OPEN=j.open}}catch(e){}}
 async function doLogin(raw){const sid=(raw||"").replace(/[^0-9A-Za-z]/g,""),m=$("lmsg");m.hidden=true;if(sid.length<5){m.textContent="กรุณากรอกรหัสนิสิต";m.hidden=false;return}
-  try{const r=await fetch(SHEET_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"login",sid})}),j=await r.json();
+  try{const j=await postJ({action:"login",sid});
     if(!j.ok)throw new Error(j.error||"fail");
     const s=j.saved||{};ME={sid,name:j.name||"",group:j.group||"",gr:j.groups||null,att:j.att||null,hh:j.hh||null,lv:Math.min(4,s.lv||0),st:(s.stars||[]).reduce((a,b)=>a+(b||0),0),m:j.missions||{},gw:j.gw||null};
     try{sessionStorage.setItem("cn-sid",sid);localStorage.setItem("chn1-sid",sid)}catch(x){}
