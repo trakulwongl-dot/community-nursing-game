@@ -24,6 +24,8 @@ h2{font-family:var(--fd);font-weight:600;font-size:18px;margin:0 0 10px}
 .pd.r1{background:#fff3c4;padding-top:16px}.pd.r2{background:#eef2f5}.pd.r3{background:#f7e3cf}
 .pd svg{width:40px;height:32px}.pd .n{font-weight:600;font-size:15px;overflow-wrap:anywhere;margin-top:2px}.pd .s{font-family:var(--fd);font-weight:600;font-size:20px}
 .av{display:inline-grid;place-items:center;width:44px;height:44px;border-radius:50%;border:2.5px solid var(--ink);font-family:var(--fd);font-weight:600;font-size:20px;color:#fff}
+[hidden]{display:none!important}
+.btn.on{background:var(--sun,#f6b73c)}
 table{width:100%;border-collapse:collapse}th{font-size:12.5px;text-align:left;opacity:.65;padding:4px 6px}td{padding:8px 6px;border-top:1.5px dashed #e6d9bd;font-size:15px}
 tr.row{cursor:pointer}tr.row:hover{background:#fbf3dc}td.rk{width:36px;font-family:var(--fd);font-weight:600}td.sc{font-weight:600;text-align:right}
 td svg{width:20px;height:16px;vertical-align:-2px;margin-right:2px}
@@ -43,7 +45,7 @@ td svg{width:20px;height:16px;vertical-align:-2px;margin-right:2px}
 </style></head><body><div class="wrap">
 <header><div><h1>กระดานอันดับ</h1><div class="sub" id="sub">กำลังโหลด...</div></div><div><button class="btn" id="rf">รีเฟรช</button> <a class="btn" href="game.html" style="background:#fff">กลับไปเล่น</a> <a class="btn" href="map.html" style="background:#fff">แผนที่</a></div></header>
 <section class="card"><h2>ห้องมงกุฎ ใครได้มงกุฎไหน</h2><div class="crowns" id="crowns"></div></section>
-<section class="card"><h2>ตารางอันดับ</h2><div class="pod" id="pod"></div><div id="tbl"></div></section>
+<section class="card"><h2>ตารางอันดับ</h2><div class="row" style="margin-bottom:8px"><button type="button" class="btn on" id="tp">รายบุคคล</button><button type="button" class="btn" id="tg">รายกลุ่ม</button></div><div class="pod" id="pod"></div><div id="tbl"></div><div id="gv" hidden></div></section>
 <div id="msg"></div></div>
 <div id="pop"><div class="pc" id="pc"></div></div>
 <script>
@@ -81,7 +83,13 @@ function render(){
   $("crowns").innerHTML=crownsOf().map(x=>`<button class="cw" data-id="${esc(x.r.id)}">${crown(x.c)}<b>${x.name}</b><div class="v">${x.desc}</div><div class="who">${esc(x.r.name||"-")}</div><div class="v">${x.val}</div></button>`).join("")||'<div class="empty">ยังไม่มีมงกุฎ เริ่มเล่นเพื่อชิงมงกุฎได้เลย</div>';
   const top=rows.slice(0,3),order=[1,0,2].filter(i=>top[i]);
   $("pod").innerHTML=order.map(i=>`<button class="pd r${i+1}" data-id="${esc(top[i].id)}">${crown(rankCol(i))}<div class="n">${esc(top[i].name||"-")}</div><div class="s">${top[i].net}</div><div style="font-size:12px;opacity:.7">อันดับ ${i+1}</div></button>`).join("");
-  $("tbl").innerHTML=rows.length?`<table><tr><th>#</th><th>ชื่อ</th><th>ดาว</th><th style="text-align:right">แต้ม</th></tr>`+rows.slice(0,100).map((r,i)=>`<tr class="row" data-id="${esc(r.id)}"><td class="rk">${i+1}</td><td>${rankCol(i)?crown(rankCol(i)):""}${esc(r.name||"-")}</td><td>${r.starN}/12</td><td class="sc">${r.net}</td></tr>`).join("")+"</table>":'<div class="empty">ยังไม่มีผู้เล่น</div>'}
+  $("tbl").innerHTML=rows.length?`<table><tr><th>#</th><th>ชื่อ</th><th>ดาว</th><th style="text-align:right">แต้ม</th></tr>`+rows.slice(0,100).map((r,i)=>`<tr class="row" data-id="${esc(r.id)}"><td class="rk">${i+1}</td><td>${rankCol(i)?crown(rankCol(i)):""}${esc(r.name||"-")}</td><td>${r.starN}/12</td><td class="sc">${r.net}</td></tr>`).join("")+"</table>":'<div class="empty">ยังไม่มีผู้เล่น</div>';renderGroups()}
+let VIEW="p";setTimeout(()=>{$("tp").onclick=()=>setView("p");$("tg").onclick=()=>setView("g")},0);
+function groupRows(){const m={};rows.forEach(q=>{if(!q.g)return;const x=m[q.g]=m[q.g]||{g:q.g,n:0,net:0,star:0};x.n++;x.net+=q.net;x.star+=q.starN});return Object.values(m).map(x=>Object.assign(x,{avg:Math.round(x.net/x.n)})).sort((a,b)=>b.avg-a.avg||b.net-a.net)}
+function renderGroups(){const g=groupRows();
+  $("gv").innerHTML=g.length?`<div class="note" style="margin-bottom:6px">จัดอันดับด้วยแต้มเฉลี่ยต่อคน เพื่อให้กลุ่มที่มีสมาชิก 7 และ 8 คนแข่งกันได้เป็นธรรม</div><table><tr><th>#</th><th>กลุ่ม</th><th>เล่นแล้ว</th><th>ดาวรวม</th><th style="text-align:right">แต้มเฉลี่ย</th><th style="text-align:right">แต้มรวม</th></tr>`+g.map((x,i)=>`<tr><td class="rk">${i+1}</td><td>${rankCol(i)?crown(rankCol(i)):""}กลุ่ม ${esc(x.g)}</td><td>${x.n} คน</td><td>${x.star}</td><td class="sc">${x.avg}</td><td class="sc">${x.net}</td></tr>`).join("")+"</table>":'<div class="empty">ยังไม่มีข้อมูลกลุ่ม</div>';
+  setView(VIEW)}
+function setView(v){VIEW=v;$("pod").hidden=$("tbl").hidden=v!=="p";$("gv").hidden=v!=="g";$("tp").classList.toggle("on",v==="p");$("tg").classList.toggle("on",v==="g")}
 function openPop(id){
   const i=rows.findIndex(r=>r.id===id);if(i<0)return;const r=rows[i],cs=myCrowns(id);
   $("pc").innerHTML=`<div class="av" style="background:${avc(r.id)}">${esc((r.name||"?").trim().charAt(0)||"?")}</div><h3>${esc(r.name||"-")}</h3><span class="ttl">${title(i,r)}</span>
