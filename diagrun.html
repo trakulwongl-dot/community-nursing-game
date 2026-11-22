@@ -67,6 +67,8 @@ body.playing #ins{display:none}
 .leg{display:grid;gap:6px}.li{display:flex;gap:8px;align-items:flex-start;font-size:14px;line-height:1.45}.li.got{opacity:.4;text-decoration:line-through}
 .bd{flex:none;width:24px;height:24px;border-radius:50%;color:#fff;font:700 12.5px var(--fb);display:flex;align-items:center;justify-content:center;border:2px solid var(--line)}
 .b-prob{background:#d9483d}.b-cause{background:#8a6bd1}.b-ev{background:#e0a21f;color:#23323b}
+.dgcard{border:3px solid var(--line);border-radius:16px;background:color-mix(in srgb,var(--sun) 30%,var(--surface));box-shadow:0 4px 0 var(--line);padding:12px 14px;display:grid;gap:6px}.dgcard small{font-weight:600;color:var(--muted,#5b6b74)}.dgp{font:700 19px/1.4 var(--fd)}
+.dgbox{border:2.5px solid var(--line);border-radius:14px;background:var(--surface);padding:10px 12px;display:grid;gap:8px}.dgrow{display:grid;gap:2px;font-size:14.5px;line-height:1.5}.dgrow b{font-size:13px;color:#2d8fb8}.dgrow ul{margin:0;padding-left:18px}
 .crownline{font-weight:600;color:var(--ink);background:color-mix(in srgb,var(--sun) 40%,var(--surface));border:2px solid var(--line);border-radius:12px;padding:8px 10px}
 </style></head><body><div class="wrap">
 <header style="display:grid;gap:8px">
@@ -82,7 +84,7 @@ body.playing #ins{display:none}
 <section class="card" id="closed" hidden><h2>ครูยังไม่เปิดบทที่ 2</h2><p class="note">รอครูเปิดบทที่ 2 ในหน้าครู แล้วกลับมาเล่นได้เลย</p><a class="btn" href="map.html">กลับแผนที่</a></section>
 <section class="card" id="intro" hidden>
   <h2>วิธีเล่น</h2>
-  <p class="note">1) เลื่อนตัวมาสคอตด้วยปุ่มลูกศร/WASD ปัดบนจอ หรือกดปุ่มลูกศรด้านล่าง<br>2) เก็บเหรียญ 🪙 ให้มากที่สุด 1 เหรียญ = 1 แต้มเกม (เพดาน 200 แต้ม และนับตามสัดส่วนชุดที่ตอบถูก)<br>3) 🦟 ยุง 🪳 แมลงสาบ 🐀 หนู ชนแล้วเสียหัวใจ หัวใจหมดต้องเริ่มด่านนั้นใหม่และเหรียญด่านนั้นหายหมด เก็บ 🧴 สเปรย์เพื่อให้แมลงกลัวและหนี<br>4) เมื่อพร้อมวิ่งเข้าประตู 🚪 จะทะลุไปหน้าจัดเรียงข้อวินิจฉัยของด่านนั้น (เลือกปัญหา สาเหตุ และข้อมูลสนับสนุน) ผ่านแล้วไปด่านต่อไป รวม 4 ด่าน<br>5) เวลาเดินตั้งแต่เริ่ม ใครเสร็จเร็วและถูกครบ 4 ชุดตั้งแต่ครั้งแรกได้แต้มโบนัสและมงกุฎ จะเก็บเหรียญเยอะหรือรีบเข้าประตู เลือกเอง</p>
+  <p class="note">1) เลื่อนตัวมาสคอตด้วยปุ่มลูกศร/WASD ปัดบนจอ หรือกดปุ่มลูกศรด้านล่าง<br>2) เก็บเหรียญ 🪙 ให้มากที่สุด 1 เหรียญ = 1 แต้มเกม (เพดาน 200 แต้ม และนับตามสัดส่วนชุดที่ตอบถูก)<br>3) 🦟 ยุง 🪳 แมลงสาบ 🐀 หนู ชนแล้วเสียหัวใจ หัวใจหมดต้องเริ่มด่านนั้นใหม่และเหรียญด่านนั้นหายหมด เก็บ 🧴 สเปรย์เพื่อให้แมลงกลัวและหนี<br>4) เมื่อพร้อมวิ่งเข้าประตู 🚪 จะทะลุไปหน้าข้อวินิจฉัยของด่านนั้น ซึ่งเริ่มด้วยการ์ดปัญหา ให้เลือกสาเหตุและข้อมูลสนับสนุน ระบบจะประกอบเป็นข้อวินิจฉัย (ปัญหา + เนื่องจาก สาเหตุ + ข้อมูลสนับสนุน) แล้วไปด่านต่อไป รวม 4 ด่าน<br>5) เวลาเดินตั้งแต่เริ่ม ใครเสร็จเร็วและถูกครบ 4 ชุดตั้งแต่ครั้งแรกได้แต้มโบนัสและมงกุฎ จะเก็บเหรียญเยอะหรือรีบเข้าประตู เลือกเอง</p>
   <div class="row"><button class="btn" id="go">เริ่มวิ่ง</button><a class="btn alt" href="diagnosis.html">เล่นแบบจิ๊กซอว์ (ไม่แข่งเวลา)</a></div>
   <div class="note" id="prev"></div>
 </section>
@@ -150,25 +152,35 @@ function hud(){$("stg").textContent=`ด่าน ${stage+1} จาก 4`;
   $("cn").textContent="🪙 "+(coinsBank+coinsStage);
   $("ins").textContent=`เก็บเหรียญแล้ววิ่งเข้าประตู 🚪 ไปจัดเรียงข้อวินิจฉัย · กลุ่มประชากรด่านนี้: ${TXT[ORDER[stage]]}`;
   $("pk").innerHTML=""}
+const probOf=pop=>"P"+pop.slice(1);
+function diagBox(parent,pk,marks){ // ประกอบเป็นข้อวินิจฉัย: ปัญหา + เนื่องจาก(สาเหตุ) + ดังจะเห็นได้จาก(ข้อมูลสนับสนุน)
+  const bx=document.createElement("div");bx.className="dgbox";
+  const mk=(lab,txt,ok)=>{const d=document.createElement("div");d.className="dgrow";const b=document.createElement("b");b.textContent=lab+(ok===undefined?"":ok?" ✓":" ✗");d.appendChild(b);const t=document.createElement("span");t.textContent=txt;d.appendChild(t);bx.appendChild(d)};
+  mk("ปัญหา",TXT[pk.prob],marks&&marks.probOk);mk("สาเหตุ",TXT[pk.cause],marks&&marks.causeOk);
+  const e=document.createElement("div");e.className="dgrow";const b=document.createElement("b");b.textContent="ข้อมูลสนับสนุน"+(marks?marks.evOk?" ✓":" ✗":"");e.appendChild(b);
+  const ul=document.createElement("ul");pk.ev.forEach(x=>{const li=document.createElement("li");li.textContent=TXT[x];ul.appendChild(li)});e.appendChild(ul);bx.appendChild(e);parent.appendChild(bx);return bx}
 function openPuzzle(){running=false;bgm(false);document.body.classList.remove("playing");coinsBank+=coinsStage;coinsStage=0;beep(880,.2,"sine");hud();
-  $("play").hidden=true;const z=$("pz");z.hidden=false;z.innerHTML="";const pop=ORDER[stage],n=EVN[pop]||3;
+  $("play").hidden=true;const z=$("pz");z.hidden=false;z.innerHTML="";const pop=ORDER[stage],n=EVN[pop]||3,prob=probOf(pop);
   const sd=seedOf(sid)+stage*13,add=(tag,txt,cls,par)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;(par||z).appendChild(e);return e};
-  add("div",`ด่านที่ ${stage+1} จาก 4 · 🪙 ${coinsBank}`,"tag");add("h2","จัดเรียงข้อวินิจฉัย");
-  add("p",`กลุ่มประชากร: ${TXT[pop]}`,"note").style.fontWeight="600";
-  const usedIds=new Set();picks.slice(0,stage).forEach(q=>{if(q){usedIds.add(q.prob);usedIds.add(q.cause);q.ev.forEach(x=>usedIds.add(x))}});
+  add("div",`ด่านที่ ${stage+1} จาก 4 · 🪙 ${coinsBank}`,"tag");add("h2","ข้อวินิจฉัยทางการพยาบาล");
+  const card=add("div",null,"dgcard");add("small","ปัญหาที่พบ · "+TXT[pop],null,card);add("div",TXT[prob],"dgp",card);
+  const usedIds=new Set();picks.slice(0,stage).forEach(q=>{if(q){usedIds.add(q.cause);q.ev.forEach(x=>usedIds.add(x))}});
   add("p",(stage>0?"ตัวเลือกที่เลือกไปแล้วในด่านก่อนหน้าจะไม่แสดงซ้ำ · ":"")+"ระวัง มีตัวเลือกหลอกปนอยู่ด้วย","note");
-  const sel={prob:"",cause:"",ev:[]},btn=document.createElement("button");
-  const chk=()=>{const ok=sel.prob&&sel.cause&&sel.ev.length===n;btn.disabled=!ok;msg.textContent=ok?"":`เลือกปัญหา 1 · สาเหตุ 1 · ข้อมูลสนับสนุน ${n} ใบ (ตอนนี้ ${sel.ev.length}/${n})`};
+  const sel={cause:"",ev:[]},btn=document.createElement("button");
+  const chk=()=>{const ok=sel.cause&&sel.ev.length===n;btn.disabled=!ok;msg.textContent=ok?"":`เลือกสาเหตุ 1 · ข้อมูลสนับสนุน ${n} ใบ (ตอนนี้ ${sel.ev.length}/${n})`};
   const msg=document.createElement("p");msg.className="note";
-  [["prob","1) เลือกปัญหาของกลุ่มประชากรนี้"],["cause","2) เลือกสาเหตุของปัญหา"],["ev",`3) เลือกข้อมูลสนับสนุน ${n} ใบ`]].forEach(([k,h])=>{
+  [["cause","1) เลือกสาเหตุของปัญหานี้"],["ev",`2) เลือกข้อมูลสนับสนุน ${n} ใบ ที่ยืนยันว่ามีปัญหานี้จริง`]].forEach(([k,h])=>{
     add("h3",h);const box=add("div",null,"leg");
     shuf(CARDS[k].concat(DECOY[k]).map(c=>c[0]).filter(id=>!usedIds.has(id)),mkRng(sd+k.length)).forEach(id=>{const lab=document.createElement("label");lab.className="li";lab.style.cssText="cursor:pointer;border:2px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--soft)";
       const inp=document.createElement("input");inp.type=k==="ev"?"checkbox":"radio";inp.name="pz-"+k;inp.style.marginTop="4px";
       inp.onchange=()=>{if(k==="ev"){sel.ev=[...box.querySelectorAll("input:checked")].map(x=>x.dataset.id);if(sel.ev.length>n){inp.checked=false;sel.ev=sel.ev.filter(x=>x!==id)}}else sel[k]=id;chk()};inp.dataset.id=id;
       lab.appendChild(inp);const t=document.createElement("span");t.textContent=TXT[id];lab.appendChild(t);box.appendChild(lab)})});
-  z.appendChild(msg);btn.type="button";btn.className="btn";btn.textContent=stage>=3?"ส่งคำตอบและจบเกม":"ยืนยัน ไปด่านต่อไป";z.appendChild(btn);
-  btn.onclick=()=>{picks[stage]={prob:sel.prob,cause:sel.cause,ev:sel.ev.slice()};z.hidden=true;
-    if(stage>=3){finish();return}stage++;$("play").hidden=false;document.body.classList.add("playing");startStage();last=performance.now();running=true;bgm(true)};
+  z.appendChild(msg);btn.type="button";btn.className="btn";btn.textContent="ประกอบเป็นข้อวินิจฉัย";z.appendChild(btn);
+  btn.onclick=()=>{const pk={prob,cause:sel.cause,ev:sel.ev.slice()};picks[stage]=pk;beep(740,.12,"sine");
+    z.innerHTML="";add("div",`ด่านที่ ${stage+1} จาก 4`,"tag");add("h2","ข้อวินิจฉัยของคุณ");
+    add("p","ปัญหา + เนื่องจาก สาเหตุ + ดังจะเห็นได้จากข้อมูลสนับสนุน","note");diagBox(z,pk);
+    const nb=add("button",stage>=3?"ส่งคำตอบและจบเกม":"ไปด่านต่อไป","btn");nb.type="button";
+    nb.onclick=()=>{z.hidden=true;if(stage>=3){finish();return}stage++;$("play").hidden=false;document.body.classList.add("playing");startStage();last=performance.now();running=true;bgm(true)};window.scrollTo(0,0)};
   chk();window.scrollTo(0,0)}
 // ---- เสียง ----
 let AC=null;function beep(f,d,tp){if(!SND)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=tp||"square";o.frequency.value=f;g.gain.value=.05;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
@@ -256,7 +268,7 @@ const stars=n=>"★".repeat(n)+"☆".repeat(3-n);
 function showRes(j,el){document.body.classList.remove("playing");$("play").hidden=true;const r=$("res");r.hidden=false;r.innerHTML="";const R=j.result;
   const add=(tag,txt,cls)=>{const e=document.createElement(tag);if(cls)e.className=cls;e.textContent=txt;r.appendChild(e);return e};
   add("h2",`ถูก ${R.correct} จาก 4 ชุด · ใช้เวลา ${fmt(el)}`);add("div",stars(R.stars),"stars");add("p",`🪙 เก็บเหรียญได้ ${coinsBank} เหรียญ → ได้แต้มเกม ${Math.min(200,Math.round(Math.min(coinsBank,400)*R.correct/4))} แต้ม (นับตามสัดส่วนชุดที่ถูก)`+(RACEON?"":" · ยังไม่นับจนกว่าครูอัปเดตระบบ"),"crownline");
-  R.sets.forEach((s,i)=>{const pop=ORDER[i];add("p",`ข้อวินิจฉัยที่ ${i+1} (${TXT[pop]}): ${s.ok?"✓ ถูกทั้งชุด":`ปัญหา ${s.probOk?"✓":"✗"} · สาเหตุ ${s.causeOk?"✓":"✗"} · ข้อมูลสนับสนุน ${s.evOk?"✓":"✗ (เกิน "+s.evWrong+" · ขาด "+s.evMissing+")"}`}`,"note")});
+  R.sets.forEach((s,i)=>{const pop=ORDER[i];if(picks[i]){add("h3",`ข้อวินิจฉัยที่ ${i+1} · ${TXT[pop]}`);diagBox(r,picks[i],{probOk:true,causeOk:s.causeOk,evOk:s.evOk})}if(false)add("p",`ข้อวินิจฉัยที่ ${i+1} (${TXT[pop]}): ${s.ok?"✓ ถูกทั้งชุด":`ปัญหา ${s.probOk?"✓":"✗"} · สาเหตุ ${s.causeOk?"✓":"✗"} · ข้อมูลสนับสนุน ${s.evOk?"✓":"✗ (เกิน "+s.evWrong+" · ขาด "+s.evMissing+")"}`}`,"note")});
   const rc=j.race;
   if(rc&&rc.rank>0)add("div",`👑 คุณถึงเป้าหมายเป็นอันดับ ${rc.rank} ของห้อง ได้แต้มเกมโบนัส +${rc.bonus} และมงกุฎนักล่าแมลง`+(rc.rank>1?" (อันดับ 1 จะได้มงกุฎของกระดานอันดับ)":""),"crownline");
   else if(rc&&rc.finished&&rc.correct===4)add("p","ครบถูกทุกชุดแล้ว แต่มีเพื่อนถึงก่อนในห้อง ได้ดาวไปแล้ว แต้มโบนัสเฉพาะ 3 อันดับแรก","note");
