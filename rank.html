@@ -147,6 +147,7 @@ async function submit(){
 function showRes(j){const R=j.result,r=$("res");$("game").hidden=true;r.hidden=false;r.innerHTML="";
   r.appendChild(el("h2",null,"ที่ประชุมตัดสินแล้ว: ได้ "+R.score+" จาก "+R.n+" ด่าน ("+R.pct+"%)"));r.appendChild(el("div","stars",stars(R.stars)));
   r.appendChild(el("p","note","ดาวที่ดีที่สุดของคุณ "+j.best+"/3 · ส่งแล้ว "+j.attempts+" ครั้ง"));
+  if(j.rank){const k=j.rank;r.appendChild(el("div","event","🪙 แต้มเกมจากศึกประชาคม: "+k.pts+" จาก "+k.max+" แต้ม"+(k.first?" (รวมในกระดานอันดับแล้ว)":" · นับจากการส่งครั้งแรก ส่งซ้ำได้ดาวแต่แต้มเกมไม่เพิ่ม")))}
   ROUNDS.forEach(rd=>{const q=R.qs[rd.id]||{},b=el("div","rr"),h=el("div");
     h.appendChild(el("span",null,rd.title+"  "));h.appendChild(el("span",q.ok?"ok":"bad",q.ok?"✓ ถูก":q.s>0?"✓ ถูกบางส่วน "+Math.round(q.s*100)+"%":"✗ ยังไม่ถูก"));b.appendChild(h);
     if(q.items){const names={};(rd.problems||rd.table||[]).forEach(p=>names[p.id]=p.name);b.appendChild(el("div","nt",Object.keys(q.items).map(k=>(q.items[k]?"✓ ":"✗ ")+(names[k]||k)).join(" · ")))}
