@@ -54,10 +54,16 @@ canvas{display:block;width:100%;height:auto;touch-action:none}
 .ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;background:rgba(10,20,28,.72);color:#fff;font:600 20px var(--fd);padding:20px;line-height:1.4}
 .hud{display:grid;gap:6px}.hud .top{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:600}
 .hearts{letter-spacing:2px}.pk{display:flex;flex-wrap:wrap;gap:6px}.pk span{font-size:12.5px;border:2px solid var(--line);border-radius:999px;padding:0 9px;background:var(--soft)}
-.dpad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,52px);gap:6px;justify-content:center;touch-action:none}
-.dpad button{font:700 22px var(--fb);border:2.5px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);box-shadow:0 3px 0 var(--line);touch-action:none;user-select:none}
+.dpad{display:grid;grid-template-columns:repeat(3,80px);grid-template-rows:repeat(2,64px);gap:8px;justify-content:center;touch-action:none;position:fixed;left:0;right:0;bottom:max(10px,env(safe-area-inset-bottom));z-index:30;pointer-events:none}
+.dpad button{pointer-events:auto;font:700 28px var(--fb);border:2.5px solid var(--line);border-radius:18px;background:color-mix(in srgb,var(--surface) 88%,transparent);color:var(--ink);box-shadow:0 4px 0 var(--line);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.dpad button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line);background:var(--sun)}
 .dpad .u{grid-column:2;grid-row:1}.dpad .l{grid-column:1;grid-row:2}.dpad .d{grid-column:2;grid-row:2}.dpad .r{grid-column:3;grid-row:2}
-@media (min-width:760px){.dpad{display:none}}
+@media (hover:hover) and (pointer:fine){.dpad{display:none}}
+body.playing header{display:none!important}
+body.playing .wrap{padding-top:8px;padding-bottom:160px}
+body.playing .hud{padding:8px 12px}
+body.playing .cvw{max-width:min(540px,calc((100svh - 290px)*11/13));min-width:220px}
+body.playing #ins{display:none}
 .leg{display:grid;gap:6px}.li{display:flex;gap:8px;align-items:flex-start;font-size:14px;line-height:1.45}.li.got{opacity:.4;text-decoration:line-through}
 .bd{flex:none;width:24px;height:24px;border-radius:50%;color:#fff;font:700 12.5px var(--fb);display:flex;align-items:center;justify-content:center;border:2px solid var(--line)}
 .b-prob{background:#d9483d}.b-cause{background:#8a6bd1}.b-ev{background:#e0a21f;color:#23323b}
@@ -144,7 +150,7 @@ function hud(){$("stg").textContent=`ด่าน ${stage+1} จาก 4`;
   $("cn").textContent="🪙 "+(coinsBank+coinsStage);
   $("ins").textContent=`เก็บเหรียญแล้ววิ่งเข้าประตู 🚪 ไปจัดเรียงข้อวินิจฉัย · กลุ่มประชากรด่านนี้: ${TXT[ORDER[stage]]}`;
   $("pk").innerHTML=""}
-function openPuzzle(){running=false;bgm(false);coinsBank+=coinsStage;coinsStage=0;beep(880,.2,"sine");hud();
+function openPuzzle(){running=false;bgm(false);document.body.classList.remove("playing");coinsBank+=coinsStage;coinsStage=0;beep(880,.2,"sine");hud();
   $("play").hidden=true;const z=$("pz");z.hidden=false;z.innerHTML="";const pop=ORDER[stage],n=EVN[pop]||3;
   const sd=seedOf(sid)+stage*13,add=(tag,txt,cls,par)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;(par||z).appendChild(e);return e};
   add("div",`ด่านที่ ${stage+1} จาก 4 · 🪙 ${coinsBank}`,"tag");add("h2","จัดเรียงข้อวินิจฉัย");
@@ -162,7 +168,7 @@ function openPuzzle(){running=false;bgm(false);coinsBank+=coinsStage;coinsStage=
       lab.appendChild(inp);const t=document.createElement("span");t.textContent=TXT[id];lab.appendChild(t);box.appendChild(lab)})});
   z.appendChild(msg);btn.type="button";btn.className="btn";btn.textContent=stage>=3?"ส่งคำตอบและจบเกม":"ยืนยัน ไปด่านต่อไป";z.appendChild(btn);
   btn.onclick=()=>{picks[stage]={prob:sel.prob,cause:sel.cause,ev:sel.ev.slice()};z.hidden=true;
-    if(stage>=3){finish();return}stage++;$("play").hidden=false;startStage();last=performance.now();running=true;bgm(true)};
+    if(stage>=3){finish();return}stage++;$("play").hidden=false;document.body.classList.add("playing");startStage();last=performance.now();running=true;bgm(true)};
   chk();window.scrollTo(0,0)}
 // ---- เสียง ----
 let AC=null;function beep(f,d,tp){if(!SND)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=tp||"square";o.frequency.value=f;g.gain.value=.05;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
@@ -170,8 +176,10 @@ let AC=null;function beep(f,d,tp){if(!SND)return;try{AC=AC||new(window.AudioCont
 function setDir(dx,dy){input=[dx,dy]}
 addEventListener("keydown",e=>{const m={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0],W:[0,-1],S:[0,1],A:[-1,0],D:[1,0]}[e.key];if(m){setDir(m[0],m[1]);e.preventDefault()}});
 document.querySelectorAll("#dp button").forEach(b=>{const f=e=>{e.preventDefault();const[x,y]=b.dataset.d.split(",").map(Number);setDir(x,y)};b.addEventListener("pointerdown",f)});
-let sw=null;cv.addEventListener("touchstart",e=>{const t=e.touches[0];sw=[t.clientX,t.clientY]},{passive:true});
-cv.addEventListener("touchmove",e=>{if(!sw)return;const t=e.touches[0],dx=t.clientX-sw[0],dy=t.clientY-sw[1];if(Math.abs(dx)>16||Math.abs(dy)>16){Math.abs(dx)>Math.abs(dy)?setDir(dx>0?1:-1,0):setDir(0,dy>0?1:-1);sw=[t.clientX,t.clientY]}e.preventDefault()},{passive:false});
+let sw=null;const playing=()=>!$("play").hidden&&running;
+document.addEventListener("touchstart",e=>{if(!playing()||e.target.closest("#dp,#snd"))return;const t=e.touches[0];sw=[t.clientX,t.clientY]},{passive:true});
+document.addEventListener("touchmove",e=>{if(!playing())return;if(e.target.closest("#dp"))return e.preventDefault();if(!sw)return;const t=e.touches[0],dx=t.clientX-sw[0],dy=t.clientY-sw[1];if(Math.abs(dx)>14||Math.abs(dy)>14){Math.abs(dx)>Math.abs(dy)?setDir(dx>0?1:-1,0):setDir(0,dy>0?1:-1);sw=[t.clientX,t.clientY]}e.preventDefault()},{passive:false});
+document.addEventListener("touchend",()=>{sw=null});
 // ---- เดินเกม ----
 function movePlayer(dt){let rem=dt*P.sp;
   while(rem>1e-6){
@@ -237,15 +245,15 @@ function startRun(){
   post({action:"raceStart",sid}).then(j=>{if(!j.ok)throw new Error(j.error||"fail")}).catch(e=>{
     if(e.message==="closed"||e.message==="not_in_roster"){running=false;bgm(false);const o=$("ov");o.textContent=e.message==="closed"?"ครูยังไม่เปิดบทที่ 2":"ไม่พบรหัสนิสิตนี้ในรายชื่อรายวิชา";o.hidden=false;return}
     RACEON=false;$("ins").textContent="ระบบจับเวลาแข่งยังไม่พร้อม เล่นต่อได้แต่ไม่นับโบนัส · "+e.message});
-  $("intro").hidden=true;$("res").hidden=true;$("play").hidden=false;$("go").disabled=false;
+  $("intro").hidden=true;$("res").hidden=true;$("play").hidden=false;document.body.classList.add("playing");$("go").disabled=false;
   runId++;stage=0;picks=[];coinsBank=0;coinsStage=0;ORDER=shuf(CARDS.pop.map(c=>c[0]),mkRng(seedOf(sid)));startStage();t0=performance.now();last=performance.now();running=true;beep(440,.12,"sine");bgm(true)}
-async function finish(){running=false;bgm(false);beep(988,.3,"sine");const el=(performance.now()-t0)/1000;say("ครบ 4 ข้อแล้ว! กำลังตรวจ…",60000);
+async function finish(){running=false;bgm(false);document.body.classList.remove("playing");beep(988,.3,"sine");const el=(performance.now()-t0)/1000;say("ครบ 4 ข้อแล้ว! กำลังตรวจ…",60000);
   const slots=ORDER.map((p,i)=>({pop:p,prob:picks[i].prob,cause:picks[i].cause,ev:picks[i].ev}));
   try{const j=await post({action:"mission",sid,mission:"ch2-diag",slots,race:RACEON,coins:coinsBank});if(!j.ok)throw new Error(j.error||"fail");clearTimeout(ovT);$("ov").hidden=true;showRes(j,el)}
   catch(e){clearTimeout(ovT);$("ov").textContent=e.message==="closed"?"ครูยังไม่เปิดบทที่ 2":"ส่งไม่สำเร็จ กดเพื่อลองส่งอีกครั้ง";$("ov").style.cursor="pointer";$("ov").onclick=()=>{$("ov").onclick=null;finish2(slots,el)}}}
 async function finish2(slots,el){try{const j=await post({action:"mission",sid,mission:"ch2-diag",slots,race:RACEON,coins:coinsBank});if(!j.ok)throw new Error(j.error);$("ov").hidden=true;showRes(j,el)}catch(e){$("ov").textContent="ส่งไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วรีเฟรช"}}
 const stars=n=>"★".repeat(n)+"☆".repeat(3-n);
-function showRes(j,el){$("play").hidden=true;const r=$("res");r.hidden=false;r.innerHTML="";const R=j.result;
+function showRes(j,el){document.body.classList.remove("playing");$("play").hidden=true;const r=$("res");r.hidden=false;r.innerHTML="";const R=j.result;
   const add=(tag,txt,cls)=>{const e=document.createElement(tag);if(cls)e.className=cls;e.textContent=txt;r.appendChild(e);return e};
   add("h2",`ถูก ${R.correct} จาก 4 ชุด · ใช้เวลา ${fmt(el)}`);add("div",stars(R.stars),"stars");add("p",`🪙 เก็บเหรียญได้ ${coinsBank} เหรียญ → ได้แต้มเกม ${Math.min(200,Math.round(Math.min(coinsBank,400)*R.correct/4))} แต้ม (นับตามสัดส่วนชุดที่ถูก)`+(RACEON?"":" · ยังไม่นับจนกว่าครูอัปเดตระบบ"),"crownline");
   R.sets.forEach((s,i)=>{const pop=ORDER[i];add("p",`ข้อวินิจฉัยที่ ${i+1} (${TXT[pop]}): ${s.ok?"✓ ถูกทั้งชุด":`ปัญหา ${s.probOk?"✓":"✗"} · สาเหตุ ${s.causeOk?"✓":"✗"} · ข้อมูลสนับสนุน ${s.evOk?"✓":"✗ (เกิน "+s.evWrong+" · ขาด "+s.evMissing+")"}`}`,"note")});
