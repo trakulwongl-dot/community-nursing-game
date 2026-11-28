@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>ศึกปาข้ามรั้ว · การเขียนโครงการ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;700;800&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  --petal:#F26B1D; --petal-deep:#B84A0B; --uniform:#A9CDEB; --uniform-deep:#5E8FBC;
+  --leaf:#6B8E23; --leaf-deep:#45601A; --ink:#1F2A3D; --paper:#FFFCF5; --line:#E6DCC8;
+  --mosq:#262626; --ok:#2F8F46; --bad:#C0392B; --gold:#F5B800;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#bae6fd;font-family:'Prompt',system-ui,sans-serif;color:var(--ink);-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
+#gl{touch-action:none}
+#fx{pointer-events:none}
+.k{font-family:'Kanit',sans-serif}
+button{font-family:'Kanit',sans-serif;cursor:pointer;border:0;color:inherit}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* chunky clay buttons, like the mascot's toy finish */
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:.4em;padding:.62em 1.3em;border-radius:16px;font-weight:700;font-size:1.05rem;color:#fff;background:linear-gradient(#ff8a42,var(--petal));box-shadow:0 5px 0 var(--petal-deep),0 8px 14px rgba(120,50,0,.25);transition:transform .06s,box-shadow .06s;overflow:hidden}
+.btn::before{content:"";position:absolute;left:8%;right:8%;top:4px;height:38%;border-radius:12px;background:linear-gradient(rgba(255,255,255,.55),rgba(255,255,255,0));pointer-events:none}
+.btn:active,.btn.pressed{transform:translateY(4px);box-shadow:0 1px 0 var(--petal-deep),0 3px 6px rgba(120,50,0,.2)}
+.btn.blue{background:linear-gradient(#c3def3,var(--uniform));color:var(--ink);box-shadow:0 5px 0 var(--uniform-deep),0 8px 14px rgba(30,60,100,.2)}
+.btn.blue:active{box-shadow:0 1px 0 var(--uniform-deep)}
+.btn.leaf{background:linear-gradient(#8fb63c,var(--leaf));box-shadow:0 5px 0 var(--leaf-deep),0 8px 14px rgba(40,60,10,.25)}
+.btn.leaf:active{box-shadow:0 1px 0 var(--leaf-deep)}
+.btn:disabled{filter:grayscale(.8);opacity:.55;cursor:default}
+.icon-btn{width:40px;height:40px;border-radius:12px;background:var(--paper);box-shadow:0 4px 0 var(--line);font-size:1.15rem;display:grid;place-items:center}
+.icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+
+/* HUD */
+#hud{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:calc(10px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 0 calc(12px + env(safe-area-inset-left));pointer-events:none;z-index:5}
+#hud>*{pointer-events:auto}
+.card{width:min(270px,30vw);background:var(--paper);border-radius:18px;padding:9px 12px 10px;box-shadow:0 5px 0 var(--line),0 10px 20px rgba(0,0,0,.12);transition:box-shadow .25s,transform .25s}
+.card .row{display:flex;align-items:center;gap:8px}
+.card .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:1.2rem;flex:none}
+#cardFl .av{background:#FFE3CF}
+#cardMq .av{background:#E4E4E4}
+.card .nm{font-family:'Kanit';font-weight:700;font-size:1rem;line-height:1.1}
+.card .sub{font-size:.74rem;opacity:.7}
+.hpwrap{margin-top:7px;height:14px;border-radius:8px;background:#EFE6D6;overflow:hidden;position:relative}
+.hpbar{height:100%;width:100%;border-radius:8px;transition:width .5s cubic-bezier(.3,1.4,.5,1)}
+#cardFl .hpbar{background:linear-gradient(90deg,#ff9a55,var(--petal))}
+#cardMq .hpbar{background:linear-gradient(90deg,#666,#222)}
+.hpnum{position:absolute;right:6px;top:-1px;font:700 .72rem 'Kanit';color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.card.turn{transform:translateY(2px)}
+#cardFl.turn{box-shadow:0 5px 0 var(--petal),0 0 0 3px var(--petal),0 10px 24px rgba(242,107,29,.4)}
+#cardMq.turn{box-shadow:0 5px 0 #555,0 0 0 3px #444,0 10px 24px rgba(0,0,0,.35)}
+#cardMq{text-align:right}
+#cardMq .row{flex-direction:row-reverse}
+#mid{display:flex;flex-direction:column;align-items:center;gap:6px}
+#turnBadge{background:var(--ink);color:#fff;font:700 .95rem 'Kanit';padding:6px 14px;border-radius:999px;white-space:nowrap;box-shadow:0 4px 0 #0c1220}
+#wind{background:var(--paper);border-radius:999px;padding:4px 12px;font:600 .85rem 'Kanit';box-shadow:0 3px 0 var(--line);display:flex;align-items:center;gap:6px;white-space:nowrap}
+#windArrow{display:inline-block;transition:transform .3s;color:var(--uniform-deep);font-size:1.1rem}
+#tools{display:flex;gap:6px}
+
+/* action bar */
+#actionBar{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(140%);display:flex;align-items:flex-end;gap:10px;z-index:6;transition:transform .25s ease}
+#actionBar.show{transform:translateX(-50%) translateY(0)}
+.item{position:relative;width:62px;height:62px;border-radius:16px;background:var(--paper);box-shadow:0 5px 0 var(--line),0 8px 14px rgba(0,0,0,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:1.35rem;line-height:1}
+.item small{font:600 .62rem 'Prompt';margin-top:3px}
+.item b{position:absolute;top:-6px;right:-6px;background:var(--petal);color:#fff;font:700 .72rem 'Kanit';width:20px;height:20px;border-radius:50%;display:grid;place-items:center}
+.item:disabled{opacity:.4}
+.item.on{box-shadow:0 5px 0 var(--petal),0 0 0 3px var(--petal)}
+#chargeBtn{height:74px;min-width:190px;font-size:1.2rem;border-radius:20px;touch-action:none}
+
+/* toast */
+#toast{position:fixed;left:50%;top:22%;transform:translate(-50%,-10px);background:var(--ink);color:#fff;font:700 1.15rem 'Kanit';padding:10px 22px;border-radius:16px;opacity:0;transition:opacity .2s,transform .2s;z-index:20;pointer-events:none;text-align:center;max-width:90vw;box-shadow:0 5px 0 #0c1220}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.think{animation:pulse 0.6s infinite alternate}
+@keyframes pulse{to{background:#3b4a66}}
+.float{position:fixed;font:800 1.8rem 'Kanit';pointer-events:none;z-index:15;text-shadow:0 3px 0 rgba(0,0,0,.25);animation:floatUp 1.3s ease-out forwards;transform:translate(-50%,-50%)}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}15%{opacity:1;transform:translate(-50%,-60%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-220%) scale(1)}}
+
+/* overlay + sheets */
+.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:30;padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));background:rgba(31,42,61,.35)}
+.overlay.show{display:flex}
+
+/* question = a clipped project-proposal form */
+#qSheet{position:relative;width:min(760px,96vw);max-height:94vh;overflow:auto;background:var(--paper);border-radius:10px 10px 18px 18px;padding:34px 26px 22px;box-shadow:0 8px 0 #d8ccb2,0 20px 40px rgba(0,0,0,.25);background-image:repeating-linear-gradient(transparent 0 33px,#F1E8D6 33px 34px)}
+#qSheet::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:22px;background:linear-gradient(#9a7b54,#7a5c38);border-radius:0 0 10px 10px;box-shadow:0 3px 0 #5d4427}
+.qhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;border-bottom:2px solid var(--line);padding-bottom:8px}
+.qform{font:700 .9rem 'Kanit';color:var(--petal-deep)}
+.qtopic{font:600 .78rem 'Prompt';background:#E9F2DA;color:var(--leaf-deep);padding:3px 10px;border-radius:999px;white-space:nowrap}
+.qwho{font:600 .8rem 'Prompt';opacity:.65}
+#qText{font:600 1.15rem/1.55 'Prompt';margin:6px 0 14px}
+#qOpts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{display:flex;gap:10px;align-items:flex-start;text-align:left;padding:11px 12px;border-radius:14px;background:#fff;box-shadow:0 4px 0 var(--line),inset 0 0 0 2px var(--line);font:500 .98rem/1.4 'Prompt';color:var(--ink);transition:transform .06s}
+.opt .L{flex:none;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font:700 .95rem 'Kanit';background:var(--uniform);color:var(--ink)}
+.opt:not(:disabled):hover{box-shadow:0 4px 0 var(--uniform-deep),inset 0 0 0 2px var(--uniform-deep)}
+.opt:not(:disabled):active{transform:translateY(3px)}
+.opt.right{box-shadow:0 4px 0 var(--ok),inset 0 0 0 3px var(--ok);background:#EAF7EC}
+.opt.right .L{background:var(--ok);color:#fff}
+.opt.wrong{box-shadow:0 4px 0 var(--bad),inset 0 0 0 3px var(--bad);background:#FCECEA}
+.opt.wrong .L{background:var(--bad);color:#fff}
+.opt:disabled{cursor:default}
+#qFeed{display:none;margin-top:14px;padding:12px 14px;border-radius:14px;align-items:flex-start;gap:12px}
+#qFeed.show{display:flex}
+#qFeed.good{background:#EAF7EC}
+#qFeed.bad{background:#FCECEA}
+#qFeed .ft{font:700 1.05rem 'Kanit'}
+#qFeed.good .ft{color:var(--ok)}
+#qFeed.bad .ft{color:var(--bad)}
+#qFeed p{font-size:.92rem;line-height:1.5;margin-top:2px}
+#qFeed .btn{margin-left:auto;flex:none;align-self:center}
+
+/* start */
+#start{background:linear-gradient(180deg,rgba(186,230,253,.25),rgba(31,42,61,.45))}
+.startBox{width:min(620px,94vw);max-height:94vh;overflow:auto;background:var(--paper);border-radius:24px;padding:22px 26px 24px;box-shadow:0 8px 0 var(--line),0 24px 50px rgba(0,0,0,.25);text-align:center}
+.course{display:inline-block;font:600 .82rem 'Prompt';color:var(--leaf-deep);background:#E9F2DA;padding:4px 12px;border-radius:999px}
+.title{font:800 clamp(2.2rem,6.5vw,3.4rem)/1.05 'Kanit';color:var(--petal);margin:10px 0 2px;letter-spacing:-.01em;text-shadow:0 4px 0 #FFD9C2}
+.vs{font:700 1.15rem 'Kanit';color:var(--ink)}
+.rules{list-style:none;margin:14px auto 16px;max-width:460px;text-align:left;display:grid;gap:6px;font-size:.92rem;line-height:1.45}
+.rules li{display:flex;gap:9px;align-items:flex-start}
+.rules li span{flex:none;font-size:1.05rem}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.mode{padding:12px 10px;border-radius:16px;background:#fff;box-shadow:0 4px 0 var(--line),inset 0 0 0 2px var(--line);text-align:center}
+.mode b{display:block;font:700 1rem 'Kanit'}
+.mode small{font:500 .78rem 'Prompt';opacity:.7}
+.mode.sel{box-shadow:0 4px 0 var(--petal),inset 0 0 0 3px var(--petal);background:#FFF3EA}
+#loadMsg{font-size:.82rem;opacity:.7;margin-top:10px;min-height:1.2em}
+
+/* game over */
+.overBox{width:min(520px,94vw);max-height:94vh;overflow:auto;background:var(--paper);border-radius:24px;padding:22px 24px;text-align:center;box-shadow:0 8px 0 var(--line),0 24px 50px rgba(0,0,0,.25)}
+.trophy{font-size:3rem;line-height:1}
+#overTitle{font:800 1.9rem 'Kanit';margin:4px 0}
+#stars{font-size:2.4rem;letter-spacing:6px;margin:4px 0}
+#stars .off{filter:grayscale(1);opacity:.3}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 16px}
+.stat{background:#fff;border-radius:14px;padding:10px;box-shadow:inset 0 0 0 2px var(--line)}
+.stat b{display:block;font:700 .95rem 'Kanit'}
+.stat .big{font:800 1.6rem 'Kanit'}
+.stat small{font-size:.78rem;opacity:.7}
+.overBtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+#rotate{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;background:var(--ink);color:#fff;text-align:center;padding:24px;font:600 1.05rem 'Prompt'}
+#rotate .ph{font-size:3rem;animation:rot 1.6s infinite}
+@keyframes rot{50%{transform:rotate(90deg)}}
+@media (orientation:portrait) and (max-width:600px){ body:not(.portrait-ok) #rotate{display:flex} }
+
+@media (max-height:520px){
+  #hud{padding-top:calc(6px + env(safe-area-inset-top))}
+  .card{padding:6px 10px 7px;border-radius:14px}
+  .card .av{width:26px;height:26px;font-size:.95rem}
+  .card .nm{font-size:.86rem}.card .sub{font-size:.66rem}
+  .hpwrap{height:11px;margin-top:5px}.hpnum{font-size:.62rem;top:-2px}
+  #turnBadge{font-size:.8rem;padding:4px 10px}
+  #wind{font-size:.74rem;padding:2px 10px}
+  .icon-btn{width:32px;height:32px;font-size:.95rem;border-radius:10px}
+  .item{width:50px;height:50px;font-size:1.1rem}.item small{font-size:.55rem}
+  #chargeBtn{height:56px;min-width:150px;font-size:1rem}
+  #qSheet{padding:24px 16px 12px;max-height:96vh}
+  #qSheet::before{height:14px;width:90px}
+  .qhead{margin-bottom:4px;padding-bottom:4px}
+  #qText{font-size:.95rem;line-height:1.45;margin:2px 0 8px}
+  #qOpts{gap:6px}
+  .opt{padding:7px 9px;font-size:.84rem;line-height:1.3;border-radius:11px}
+  .opt .L{width:22px;height:22px;font-size:.8rem;border-radius:7px}
+  #qFeed{margin-top:8px;padding:8px 10px}
+  #qFeed p{font-size:.8rem}
+  .startBox,.overBox{padding:12px 18px 14px}
+  .title{font-size:2rem;margin:4px 0 0}
+  .rules{margin:8px auto 10px;font-size:.8rem;gap:3px}
+  .modes{margin-bottom:10px}.mode{padding:7px}
+  .btn{font-size:.95rem;padding:.5em 1.1em}
+  .trophy{font-size:2rem}#overTitle{font-size:1.4rem}#stars{font-size:1.8rem}
+  .stats{margin:6px 0 10px}.stat{padding:6px}.stat .big{font-size:1.2rem}
+}
+@media (max-width:560px) and (min-height:521px){ #qOpts{grid-template-columns:1fr} .modes{grid-template-columns:1fr} }
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms!important;transition-duration:.01ms!important} }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<canvas id="fx"></canvas>
+
+<div id="hud" style="display:none">
+  <div class="card" id="cardFl">
+    <div class="row"><div class="av">🌸</div><div><div class="nm" id="nameFl">นิสิตพยาบาล</div><div class="sub" id="subFl">คำถาม 0/10</div></div></div>
+    <div class="hpwrap"><div class="hpbar" id="hpFl"></div><span class="hpnum" id="hpFlN">100</span></div>
+  </div>
+  <div id="mid">
+    <div id="turnBadge">พร้อม</div>
+    <div id="wind">ลม <span id="windArrow">➜</span> <span id="windVal">0.0</span></div>
+    <div id="tools">
+      <button class="icon-btn" id="btnSound" aria-label="เปิดหรือปิดเสียง">🔊</button>
+      <button class="icon-btn" id="btnCam" aria-label="รีเซ็ตมุมกล้อง">🎥</button>
+      <button class="icon-btn" id="btnMenu" aria-label="กลับเมนูหลัก">🏠</button>
+    </div>
+  </div>
+  <div class="card" id="cardMq">
+    <div class="row"><div class="av">🦟</div><div><div class="nm" id="nameMq">ยุงลาย (บอท)</div><div class="sub" id="subMq">คำถาม 0/10</div></div></div>
+    <div class="hpwrap"><div class="hpbar" id="hpMq"></div><span class="hpnum" id="hpMqN">100</span></div>
+  </div>
+</div>
+
+<div id="actionBar">
+  <button class="item" id="itBig" aria-label="ปาใหญ่">💥<small>ปาใหญ่</small><b>1</b></button>
+  <button class="item" id="itDbl" aria-label="ปาสองลูก">⚡<small>ปา 2 ลูก</small><b>1</b></button>
+  <button class="item" id="itHeal" aria-label="ฟื้นพลัง">💚<small>+25 HP</small><b>1</b></button>
+  <button class="btn" id="chargeBtn">กดค้างเพื่อชาร์จ</button>
+</div>
+
+<div id="toast"></div>
+
+<div class="overlay" id="qModal">
+  <div id="qSheet" role="dialog" aria-modal="true" aria-labelledby="qText">
+    <div class="qhead">
+      <div><div class="qform" id="qForm">แบบเสนอโครงการ ข้อที่ 1 จาก 10</div><div class="qwho" id="qWho">ตาของนิสิตพยาบาล</div></div>
+      <span class="qtopic" id="qTopic">วัตถุประสงค์</span>
+    </div>
+    <div id="qText"></div>
+    <div id="qOpts"></div>
+    <div id="qFeed"><div><div class="ft" id="qFt"></div><p id="qExp"></p></div><button class="btn leaf" id="qNext">ไปต่อ</button></div>
+  </div>
+</div>
+
+<div class="overlay show" id="start">
+  <div class="startBox">
+    <span class="course">การพยาบาลชุมชน 2 บทที่ 3 การเขียนโครงการ</span>
+    <h1 class="title">ศึกปาข้ามรั้ว</h1>
+    <div class="vs">นิสิตพยาบาล ปะทะ ยุงลาย</div>
+    <ul class="rules">
+      <li><span>📋</span>ตอบโจทย์การเขียนโครงการให้ถูก จึงได้สิทธิ์ปา ตอบผิดเสียตา</li>
+      <li><span>🎯</span>กดค้างเพื่อชาร์จแรง ปล่อยเพื่อปา ดูทิศลมก่อนปา</li>
+      <li><span>🏁</span>ฝั่งละ 10 ข้อ ปาโดน 4 ครั้งชนะ ถ้าครบ 10 ข้อ ฝั่งที่เหลือพลังมากกว่าชนะ</li>
+    </ul>
+    <div class="modes">
+      <button class="mode sel" data-mode="1p"><b>เล่นคนเดียว</b><small>ปะทะบอทยุงลาย</small></button>
+      <button class="mode" data-mode="2p"><b>สองทีม</b><small>ผลัดกันตอบบนเครื่องเดียว</small></button>
+    </div>
+    <button class="btn" id="btnStart" disabled>เริ่มเกม</button>
+    <div id="loadMsg">กำลังโหลดตัวละคร...</div>
+  </div>
+</div>
+
+<div class="overlay" id="over">
+  <div class="overBox">
+    <div class="trophy" id="trophy">🏆</div>
+    <div id="overTitle">นิสิตพยาบาลชนะ!</div>
+    <div id="stars"></div>
+    <div class="stats">
+      <div class="stat"><b>🌸 <span id="stNameFl">นิสิตพยาบาล</span></b><div class="big" id="stFl">0/0</div><small id="stFlP">ความแม่นยำ 0%</small></div>
+      <div class="stat"><b>🦟 <span id="stNameMq">ยุงลาย</span></b><div class="big" id="stMq">0/0</div><small id="stMqP">ความแม่นยำ 0%</small></div>
+    </div>
+    <div class="overBtns">
+      <button class="btn" id="btnAgain">เล่นอีกครั้ง</button>
+      <button class="btn blue" id="btnHome">กลับเมนูหลัก</button>
+    </div>
+  </div>
+</div>
+
+<div id="rotate"><div class="ph">📱</div><div>หมุนโทรศัพท์เป็นแนวนอนเพื่อเล่น</div><button class="btn blue" onclick="document.body.classList.add('portrait-ok')">เล่นแนวตั้งต่อ</button></div>
+
+<script>
+'use strict';
+/* =========================================================
+   คลังโจทย์ บทที่ 3 การเขียนโครงการ (แบบดั้งเดิม)
+   o[0] คือคำตอบที่ถูก เกมจะสลับตำแหน่งตัวเลือกให้เอง
+   อาจารย์แก้ข้อความ เพิ่ม หรือลบข้อได้ที่นี่
+   ========================================================= */
+const QUESTIONS = [
+{t:'หลักการและเหตุผล',q:'ข้อความ “จากการสำรวจหมู่บ้านสุขใจ พบค่าดัชนีลูกน้ำยุงลาย (HI) ร้อยละ 32 สูงกว่าเกณฑ์” ควรอยู่หัวข้อใดของโครงการ',
+ o:['หลักการและเหตุผล','วัตถุประสงค์','เป้าหมาย','การประเมินผล'],
+ e:'ข้อมูลขนาดของปัญหาในพื้นที่ใช้ชี้ให้เห็นความจำเป็นที่ต้องทำโครงการ จึงอยู่ในหลักการและเหตุผล'},
+{t:'วัตถุประสงค์',q:'วัตถุประสงค์ข้อใดเขียนได้ดีที่สุด',
+ o:['เพื่อให้แกนนำครัวเรือนร้อยละ 80 มีคะแนนความรู้เรื่องการป้องกันไข้เลือดออกหลังอบรมสูงกว่าก่อนอบรม','เพื่อให้ความรู้เรื่องไข้เลือดออกแก่ประชาชน','เพื่อรณรงค์กำจัดลูกน้ำยุงลาย','เพื่อให้ชุมชนมีสุขภาพดี'],
+ e:'วัตถุประสงค์ที่ดีระบุผู้ได้รับผล สิ่งที่เปลี่ยนแปลง และเกณฑ์ที่วัดได้ ส่วนข้ออื่นบอกเพียงสิ่งที่ผู้จัดจะทำหรือกว้างเกินวัดได้'},
+{t:'วัตถุประสงค์',q:'“เพื่อให้ผู้สูงอายุมีความรู้เรื่องโรคเบาหวานดีขึ้น” ขาดองค์ประกอบใดที่สำคัญที่สุด',
+ o:['เกณฑ์ที่วัดได้ เช่น ร้อยละหรือระดับคะแนน','กลุ่มเป้าหมาย','คำกริยาที่บอกผลลัพธ์','คำว่า “เพื่อ” นำหน้า'],
+ e:'มีกลุ่มเป้าหมาย (ผู้สูงอายุ) และผลลัพธ์ (ความรู้ดีขึ้น) แล้ว แต่ยังไม่บอกว่าดีขึ้นเท่าใดจึงถือว่าบรรลุ'},
+{t:'ตัวชี้วัด',q:'วัตถุประสงค์ “เพื่อให้กลุ่มเสี่ยงความดันโลหิตสูงลดการบริโภคอาหารเค็ม” ตัวชี้วัดใดสอดคล้องที่สุด',
+ o:['ร้อยละของกลุ่มเสี่ยงที่มีคะแนนพฤติกรรมการบริโภคเค็มลดลงหลังเข้าร่วมโครงการ','ร้อยละของผู้เข้าร่วมอบรมครบตามกำหนด','จำนวนแผ่นพับที่แจกได้','ระดับความพึงพอใจต่อวิทยากร'],
+ e:'วัตถุประสงค์มุ่งที่พฤติกรรม ตัวชี้วัดจึงต้องวัดพฤติกรรม ข้ออื่นวัดกระบวนการหรือความพึงพอใจ'},
+{t:'เครื่องมือประเมิน',q:'เครื่องมือใดเหมาะที่สุดในการประเมินวัตถุประสงค์ “เพื่อให้แกนนำมีความรู้เรื่องการกำจัดแหล่งเพาะพันธุ์ยุงลาย”',
+ o:['แบบทดสอบความรู้ก่อนและหลังอบรม','แบบประเมินความพึงพอใจ','แบบบันทึกการเข้าร่วมกิจกรรม','แบบสำรวจลูกน้ำในบ้าน'],
+ e:'วัตถุประสงค์วัดความรู้ จึงต้องใช้แบบทดสอบความรู้ ส่วนแบบสำรวจลูกน้ำใช้วัดผลการปฏิบัติ'},
+{t:'ตัวชี้วัด',q:'ตัวชี้วัด “ค่า HI ของหมู่บ้านไม่เกินร้อยละ 10 หลังดำเนินโครงการ 1 เดือน” เป็นตัวชี้วัดประเภทใด',
+ o:['ตัวชี้วัดผลลัพธ์','ตัวชี้วัดปัจจัยนำเข้า','ตัวชี้วัดกระบวนการ','ตัวชี้วัดผลผลิต'],
+ e:'ค่า HI สะท้อนการเปลี่ยนแปลงของปัญหาในชุมชน จึงเป็นผลลัพธ์ ส่วนผลผลิตคือสิ่งที่ได้จากกิจกรรมโดยตรง เช่น จำนวนผู้เข้าอบรม'},
+{t:'ตัวชี้วัด',q:'ข้อใดเป็นตัวชี้วัดด้านกระบวนการ',
+ o:['ดำเนินกิจกรรมได้ตามแผนร้อยละ 100','ค่า HI ลดลงต่ำกว่าเกณฑ์','จำนวนผู้ป่วยไข้เลือดออกลดลง','คะแนนความรู้หลังอบรมสูงขึ้น'],
+ e:'ตัวชี้วัดกระบวนการดูว่าการดำเนินงานเป็นไปตามแผนหรือไม่ ข้ออื่นเป็นผลลัพธ์ของโครงการ'},
+{t:'ชื่อโครงการ',q:'ชื่อโครงการใดสมบูรณ์ที่สุด',
+ o:['โครงการส่งเสริมการกำจัดแหล่งเพาะพันธุ์ยุงลายโดยแกนนำครัวเรือน หมู่บ้านสุขใจ ปี 2569','โครงการไข้เลือดออก','โครงการชุมชนร่วมใจ ใส่ใจสุขภาพ','โครงการสุขภาพดีถ้วนหน้า'],
+ e:'ชื่อโครงการที่ดีบอกได้ว่าทำอะไร กับใคร ที่ไหน และเมื่อใด'},
+{t:'เป้าหมาย',q:'ข้อความ “แกนนำครัวเรือน หมู่บ้านสุขใจ จำนวน 40 คน” ควรอยู่หัวข้อใด',
+ o:['เป้าหมายเชิงปริมาณ','วัตถุประสงค์','หลักการและเหตุผล','ประโยชน์ที่คาดว่าจะได้รับ'],
+ e:'การระบุกลุ่มเป้าหมายพร้อมจำนวนคือเป้าหมายเชิงปริมาณ'},
+{t:'เป้าหมาย',q:'ข้อใดเป็นเป้าหมายเชิงคุณภาพ',
+ o:['แกนนำสามารถสำรวจและกำจัดแหล่งเพาะพันธุ์ยุงลายในครัวเรือนได้ถูกต้อง','แกนนำครัวเรือน 40 คน','จัดอบรม 1 วัน','ใช้งบประมาณ 5,000 บาท'],
+ e:'เป้าหมายเชิงคุณภาพบอกลักษณะหรือคุณภาพของผลที่ต้องการ ไม่ใช่จำนวนคน วัน หรือเงิน'},
+{t:'ประโยชน์ที่คาดว่าจะได้รับ',q:'“ชุมชนมีความเข้มแข็งในการป้องกันโรคไข้เลือดออกอย่างยั่งยืน” เหมาะกับหัวข้อใดที่สุด',
+ o:['ประโยชน์ที่คาดว่าจะได้รับ','วัตถุประสงค์','ตัวชี้วัด','เป้าหมายเชิงปริมาณ'],
+ e:'เป็นผลระยะยาวที่กว้างและวัดได้ยากเมื่อจบโครงการ จึงเหมาะกับประโยชน์ที่คาดว่าจะได้รับ'},
+{t:'การประเมินผล',q:'ข้อใดถูกต้องเกี่ยวกับความสัมพันธ์ระหว่างวัตถุประสงค์กับการประเมินผล',
+ o:['วัตถุประสงค์ทุกข้อต้องมีตัวชี้วัดและวิธีประเมินที่สอดคล้องกัน','ประเมินเฉพาะวัตถุประสงค์ข้อแรกก็เพียงพอ','ประเมินความพึงพอใจอย่างเดียวก็ครอบคลุมทุกข้อ','การประเมินผลเขียนแยกได้โดยไม่ต้องอิงวัตถุประสงค์'],
+ e:'การประเมินผลมีไว้ตอบว่าบรรลุวัตถุประสงค์หรือไม่ จึงต้องประเมินครบทุกข้อด้วยตัวชี้วัดที่ตรงกัน'},
+{t:'หลักการและเหตุผล',q:'การเรียงเนื้อหาในหลักการและเหตุผลข้อใดเหมาะสมที่สุด',
+ o:['สภาพและขนาดของปัญหา → สาเหตุ → แนวทางแก้ไข → ความจำเป็นของโครงการ','แนวทางแก้ไข → งบประมาณ → สภาพปัญหา → สาเหตุ','วัตถุประสงค์ → ตัวชี้วัด → สภาพปัญหา → ผู้รับผิดชอบ','ความจำเป็นของโครงการ → กิจกรรมรายวัน → ประโยชน์ → สาเหตุ'],
+ e:'เริ่มจากปัญหาและความรุนแรง วิเคราะห์สาเหตุ เสนอแนวทาง แล้วสรุปว่าทำไมต้องทำโครงการนี้'},
+{t:'หลักการและเหตุผล',q:'ข้อใดไม่ควรเขียนไว้ในหลักการและเหตุผล',
+ o:['ตารางกิจกรรมรายวันของโครงการ','สถิติของปัญหาในพื้นที่','นโยบายที่เกี่ยวข้อง','ผลกระทบของปัญหาต่อชุมชน'],
+ e:'ตารางกิจกรรมอยู่ในวิธีดำเนินการ ส่วนหลักการและเหตุผลอธิบายว่าทำไมต้องทำ'},
+{t:'วิธีดำเนินการ',q:'“ประชุมชี้แจงแกนนำ เตรียมสื่อ และประสานสถานที่” อยู่ในขั้นใดของวิธีดำเนินการ',
+ o:['ขั้นเตรียมการ','ขั้นดำเนินการ','ขั้นประเมินผล','ขั้นสรุปและรายงานผล'],
+ e:'เป็นงานที่ต้องทำก่อนลงมือจัดกิจกรรมจริง จึงเป็นขั้นเตรียมการ'},
+{t:'ระยะเวลา',q:'เครื่องมือใดนิยมใช้แสดงระยะเวลาของแต่ละกิจกรรมในโครงการ',
+ o:['แผนภูมิแกนต์ (Gantt chart)','แผนภูมิก้างปลา','ผังเครือญาติ (genogram)','แผนที่เดินดิน'],
+ e:'แผนภูมิแกนต์แสดงช่วงเวลาของแต่ละกิจกรรม ส่วนแผนภูมิก้างปลาใช้วิเคราะห์สาเหตุของปัญหา'},
+{t:'วัตถุประสงค์',q:'“เพื่อให้แกนนำมีความรู้และมีพฤติกรรมการกำจัดลูกน้ำที่ถูกต้อง” มีจุดที่ควรแก้อย่างไร',
+ o:['รวมสองประเด็นไว้ในข้อเดียว ควรแยกเป็นข้อละประเด็น','ไม่ได้ขึ้นต้นด้วยคำว่า “เพื่อ”','ไม่มีกลุ่มเป้าหมาย','ประโยคยาวเกินไป'],
+ e:'ความรู้กับพฤติกรรมวัดด้วยเครื่องมือต่างกัน ควรแยกเป็นสองข้อ แต่ละข้อมีเกณฑ์ของตัวเอง'},
+{t:'SMART',q:'ตัว M ในหลัก SMART ของการเขียนวัตถุประสงค์หมายถึงข้อใด',
+ o:['วัดได้ (Measurable)','สร้างแรงจูงใจ (Motivating)','จัดการได้ (Manageable)','มีความหมาย (Meaningful)'],
+ e:'SMART คือ เฉพาะเจาะจง วัดได้ ทำได้จริง สอดคล้องกับปัญหา และมีกรอบเวลา'},
+{t:'SMART',q:'“เพื่อให้ผู้ป่วยเบาหวานในหมู่บ้านทุกคนหายจากโรคภายใน 1 เดือน” ขัดกับหลัก SMART ข้อใดชัดเจนที่สุด',
+ o:['A ทำได้จริง (Achievable)','S เฉพาะเจาะจง (Specific)','T มีกรอบเวลา (Time-bound)','M วัดได้ (Measurable)'],
+ e:'มีกลุ่ม เวลา และสิ่งที่วัดได้แล้ว แต่การให้ทุกคนหายจากเบาหวานใน 1 เดือนเป็นไปไม่ได้จริง'},
+{t:'ตัวชี้วัด',q:'ข้อใดเป็นตัวชี้วัดที่วัดได้ชัดเจนที่สุด',
+ o:['ร้อยละ 80 ของครัวเรือนเป้าหมายไม่พบลูกน้ำยุงลายในภาชนะ','ประชาชนตระหนักเรื่องไข้เลือดออกมากขึ้น','ชุมชนสะอาดขึ้น','แกนนำมีความสุขในการทำงาน'],
+ e:'ตัวชี้วัดที่ดีระบุสิ่งที่สังเกตหรือนับได้พร้อมเกณฑ์ ข้ออื่นเป็นข้อความกว้างที่วัดไม่ได้ตรงๆ'},
+{t:'เครื่องมือประเมิน',q:'ต้องการประเมินว่า “แกนนำปฏิบัติการกำจัดลูกน้ำในบ้านจริงหรือไม่” วิธีใดน่าเชื่อถือที่สุด',
+ o:['สำรวจภาชนะในบ้านจริงด้วยแบบสำรวจลูกน้ำ','ถามความพึงพอใจหลังอบรม','ให้ทำแบบทดสอบความรู้','นับจำนวนผู้มาประชุม'],
+ e:'การปฏิบัติจริงควรวัดจากสิ่งที่สังเกตได้ในบ้าน ไม่ใช่จากความรู้หรือความพึงพอใจ'},
+{t:'ตัวชี้วัด',q:'ตัวชี้วัด “ร้อยละ 90 ของผู้เข้าร่วมพึงพอใจในระดับมากขึ้นไป” บอกอะไรได้',
+ o:['ผู้เข้าร่วมพึงพอใจต่อการจัดกิจกรรม','ปัญหาสุขภาพในชุมชนลดลง','ผู้เข้าร่วมมีความรู้เพิ่มขึ้น','ผู้เข้าร่วมเปลี่ยนพฤติกรรมแล้ว'],
+ e:'ความพึงพอใจบอกเพียงความรู้สึกต่อกิจกรรม ไม่ได้บอกว่าความรู้ พฤติกรรม หรือปัญหาเปลี่ยนไป'},
+{t:'งบประมาณ',q:'การเขียนหัวข้องบประมาณที่ดีควรเป็นแบบใด',
+ o:['แจกแจงรายการค่าใช้จ่ายพร้อมจำนวนและอัตรา และระบุแหล่งงบประมาณ','ระบุเฉพาะยอดรวม','ไม่ต้องระบุแหล่งงบประมาณ','เขียนหลังจบโครงการตามที่จ่ายจริง'],
+ e:'ผู้อนุมัติต้องตรวจสอบได้ว่าเงินใช้กับอะไร เท่าใด และมาจากแหล่งใด'},
+{t:'การประเมินผล',q:'การวัดความรู้ก่อนและหลังอบรมด้วยแบบทดสอบชุดเดียวกันในกลุ่มเดียว เป็นการประเมินแบบใด',
+ o:['กลุ่มเดียววัดก่อนและหลัง (one-group pretest–posttest)','กลุ่มทดลองและกลุ่มควบคุม','วัดหลังอย่างเดียว','สุ่มเปรียบเทียบสองกลุ่ม'],
+ e:'มีกลุ่มเดียวและวัดสองครั้งก่อนกับหลังกิจกรรม จึงเป็นแบบกลุ่มเดียววัดก่อนและหลัง'},
+{t:'ที่มาของโครงการ',q:'ปัญหาที่นำมาทำโครงการในชุมชนควรได้มาจากขั้นตอนใด',
+ o:['การจัดลำดับความสำคัญของปัญหาจากการวินิจฉัยชุมชน','ความสนใจของนิสิต','โครงการที่เคยทำในปีที่แล้ว','ปัญหาที่ทำได้ง่ายที่สุด'],
+ e:'โครงการควรตอบปัญหาสำคัญที่ได้จากข้อมูลชุมชนและการจัดลำดับความสำคัญร่วมกับชุมชน'},
+{t:'วิธีดำเนินการ',q:'วัตถุประสงค์ “เพื่อให้แกนนำร้อยละ 80 มีทักษะการสำรวจลูกน้ำถูกต้อง” กิจกรรมใดสอดคล้องที่สุด',
+ o:['ฝึกปฏิบัติสำรวจลูกน้ำในบ้านจริงโดยมีพี่เลี้ยง','บรรยายนโยบายการควบคุมโรค','แจกแผ่นพับ','ประกวดคำขวัญ'],
+ e:'ทักษะเกิดจากการฝึกปฏิบัติ กิจกรรมจึงต้องให้ลงมือทำจริง'},
+{t:'ประโยชน์ที่คาดว่าจะได้รับ',q:'วัตถุประสงค์ต่างจากประโยชน์ที่คาดว่าจะได้รับอย่างไร',
+ o:['วัตถุประสงค์ต้องวัดได้เมื่อจบโครงการ ส่วนประโยชน์ฯ เป็นผลที่กว้างหรือระยะยาวกว่า','ทั้งสองหัวข้อเหมือนกัน เขียนซ้ำได้','ประโยชน์ฯ ต้องมีตัวเลขกำกับทุกข้อ','วัตถุประสงค์เขียนหลังจบโครงการ'],
+ e:'วัตถุประสงค์ใช้ประเมินความสำเร็จของโครงการโดยตรง ประโยชน์ฯ บอกผลดีที่คาดว่าจะตามมา'},
+{t:'SMART',q:'การระบุ “ภายในเดือนธันวาคม 2569” ในวัตถุประสงค์ ตรงกับหลัก SMART ข้อใด',
+ o:['T มีกรอบเวลา (Time-bound)','R สอดคล้องกับปัญหา (Relevant)','A ทำได้จริง (Achievable)','S เฉพาะเจาะจง (Specific)'],
+ e:'การกำหนดช่วงเวลาที่ต้องบรรลุคือ Time-bound'},
+{t:'ตัวชี้วัด',q:'โครงการทำเพียง 2 สัปดาห์ แต่ตั้งตัวชี้วัด “อัตราป่วยไข้เลือดออกของหมู่บ้านลดลงร้อยละ 50” ปัญหาหลักคืออะไร',
+ o:['เวลาสั้นเกินกว่าจะเห็นผลระดับอัตราป่วย ควรใช้ตัวชี้วัดระยะสั้น เช่น ค่า HI','ไม่ได้ระบุกลุ่มเป้าหมาย','ใช้ร้อยละในตัวชี้วัดไม่ได้','ไข้เลือดออกไม่ใช่ปัญหาของชุมชน'],
+ e:'ตัวชี้วัดต้องเหมาะกับระยะเวลาโครงการ อัตราป่วยเปลี่ยนช้าและมีปัจจัยอื่นเกี่ยวข้อง'},
+{t:'การมีส่วนร่วม',q:'ใครควรมีส่วนร่วมในการวางแผนโครงการแก้ปัญหาชุมชน',
+ o:['ตัวแทนชุมชน แกนนำ อสม. และหน่วยบริการสุขภาพ ร่วมกับนิสิต','นิสิตเพียงกลุ่มเดียว','อาจารย์ผู้สอนเพียงคนเดียว','ผู้ใหญ่บ้านเพียงคนเดียว'],
+ e:'การวางแผนร่วมกับชุมชนทำให้โครงการตรงความต้องการและมีโอกาสต่อเนื่องหลังนิสิตออกจากพื้นที่'},
+{t:'วิธีดำเนินการ',q:'การเขียนวิธีดำเนินการที่ดีควรมีลักษณะใด',
+ o:['ระบุกิจกรรมเป็นลำดับ ใครทำ ทำอะไร เมื่อใด และสอดคล้องกับวัตถุประสงค์','เขียนสั้นๆ ว่า “จัดอบรม”','ไม่ต้องเรียงลำดับกิจกรรม','ใส่เฉพาะกิจกรรมที่น่าสนใจ'],
+ e:'วิธีดำเนินการต้องละเอียดพอให้ผู้อื่นทำตามได้ และทุกกิจกรรมต้องตอบวัตถุประสงค์'},
+{t:'หลักการและเหตุผล',q:'การใช้ข้อมูลระดับประเทศร่วมกับข้อมูลในพื้นที่ในหลักการและเหตุผลมีประโยชน์อย่างไร',
+ o:['แสดงทั้งภาพรวมและความรุนแรงในพื้นที่ ทำให้เห็นความจำเป็นของโครงการชัดขึ้น','ทำให้หลักการและเหตุผลยาวขึ้น','ใช้แทนการเก็บข้อมูลชุมชนได้','ไม่มีประโยชน์ ควรใช้ข้อมูลระดับประเทศอย่างเดียว'],
+ e:'ข้อมูลระดับประเทศบอกความสำคัญของปัญหา ข้อมูลในพื้นที่บอกว่าชุมชนนี้ต้องแก้ปัญหานี้'},
+{t:'ผู้รับผิดชอบ',q:'หัวข้อผู้รับผิดชอบโครงการควรระบุอะไร',
+ o:['บุคคลหรือหน่วยงานที่รับผิดชอบหลักและผู้ประสานงาน','รายชื่อผู้เข้าร่วมทุกคน','ชื่อวิทยากรเท่านั้น','ไม่จำเป็นต้องระบุ'],
+ e:'ระบุผู้รับผิดชอบเพื่อให้รู้ว่าใครดูแลและติดต่อใครเมื่อมีปัญหา'}
+];
+
+/* ===== ค่าตั้งเกม ===== */
+const CFG={TURNS:10,HP:100,DMG:25,BIG_DMG:40,HEAL:25,G:-23.5,WIND_K:0.6,WIND_MAX:5,ANG:52*Math.PI/180,CHARGE:95,
+  HIT_R:1.6,BIG_R:2.15,BALL_R:0.3,FENCE_H:4.35,FENCE_T:0.45,BOT_THINK:1350,BOT_ACC:0.72,BOT_ERR:11};
+const SPR={fl_idle:{n:24,ms:83,loop:1},fl_throw:{n:29,ms:60,rel:23},fl_hit:{n:29,ms:60},fl_laugh:{n:30,ms:83,loop:1},
+  mq_idle:{n:14,ms:83,loop:1},mq_throw:{n:18,ms:83,rel:9},mq_hit:{n:6,ms:70,hold:900,stars:1},mq_laugh:{n:38,ms:83,loop:1}};
+const SHEET={cols:8,fw:480,fh:360,ax:240,ay:345,unit:100};
+const SIDE={
+  fl:{x:-8.5,dir:1,pre:'fl',rel:[0.41,2.07],hitY:1.5,emoji:'🌸'},
+  mq:{x:8.5,dir:-1,pre:'mq',rel:[-1.58,1.95],hitY:1.45,emoji:'🦟'}
+};
+const other=s=>s==='fl'?'mq':'fl';
+const $=id=>document.getElementById(id);
+const rand=(a,b)=>a+Math.random()*(b-a);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+/* ===== เสียงสังเคราะห์ (WebAudio) ===== */
+const SFX=(()=>{let ctx=null,on=true;
+  const ac=()=>{if(!ctx){try{ctx=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ctx&&ctx.state==='suspended')ctx.resume();return ctx};
+  function tone(f,t0,dur,type='sine',vol=.18,f2){const c=ac();if(!c||!on)return;const o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,c.currentTime+t0);if(f2)o.frequency.exponentialRampToValueAtTime(f2,c.currentTime+t0+dur);g.gain.setValueAtTime(0.0001,c.currentTime+t0);g.gain.exponentialRampToValueAtTime(vol,c.currentTime+t0+.01);g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+t0+dur);o.connect(g).connect(c.destination);o.start(c.currentTime+t0);o.stop(c.currentTime+t0+dur+.05)}
+  function noise(t0,dur,vol=.25,freq=900){const c=ac();if(!c||!on)return;const b=c.createBuffer(1,c.sampleRate*dur,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);const s=c.createBufferSource();s.buffer=b;const fl=c.createBiquadFilter();fl.type='bandpass';fl.frequency.value=freq;const g=c.createGain();g.gain.value=vol;s.connect(fl).connect(g).connect(c.destination);s.start(c.currentTime+t0)}
+  return{unlock:ac,toggle(){on=!on;return on},get on(){return on},
+    throw(){noise(0,.25,.18,1800);tone(500,0,.22,'triangle',.08,1400)},
+    hit(){tone(160,0,.25,'sine',.35,50);noise(0,.18,.3,500)},
+    miss(){noise(0,.3,.2,300);tone(220,0,.18,'square',.05,120)},
+    correct(){[523,659,784].forEach((f,i)=>tone(f,i*.09,.22,'triangle',.16))},
+    wrong(){tone(311,0,.22,'sawtooth',.08);tone(262,.18,.32,'sawtooth',.08)},
+    heal(){[660,880,1046,1318].forEach((f,i)=>tone(f,i*.07,.35,'sine',.12))},
+    win(){[523,659,784,1046].forEach((f,i)=>tone(f,i*.12,.5,'triangle',.15));[523,659,784].forEach(f=>tone(f,.55,.9,'triangle',.1))},
+    tick(){tone(880,0,.05,'square',.03)}
+  }})();
+
+/* ===== ฉาก 3 มิติ ===== */
+const glc=$('gl'),fxc=$('fx'),fx=fxc.getContext('2d');
+const renderer=new THREE.WebGLRenderer({canvas:glc,antialias:true});
+const isMobile=Math.min(innerWidth,innerHeight)<600;
+renderer.setPixelRatio(Math.min(devicePixelRatio,isMobile?1.6:2));
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.06;renderer.outputEncoding=THREE.sRGBEncoding;
+const scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0xbbe8ff,0.0062);
+const camera=new THREE.PerspectiveCamera(42,1,0.1,220);
+scene.add(new THREE.HemisphereLight(0x87cefa,0x7cb342,0.82));
+const sun=new THREE.DirectionalLight(0xfff4d6,1.45);sun.position.set(-16,26,14);sun.castShadow=true;
+sun.shadow.mapSize.set(isMobile?1024:2048,isMobile?1024:2048);Object.assign(sun.shadow.camera,{left:-30,right:30,top:20,bottom:-20,near:1,far:80});scene.add(sun);
+const fill=new THREE.DirectionalLight(0xbae6fd,0.45);fill.position.set(18,12,-10);scene.add(fill);
+
+function canvasTex(w,h,draw,rep){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep,rep)}t.anisotropy=4;return t}
+const M=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.8},o));
+function add(mesh,x,y,z,shadow=true){mesh.position.set(x,y,z);if(shadow){mesh.castShadow=true;mesh.receiveShadow=true}scene.add(mesh);return mesh}
+
+// ท้องฟ้า
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(110,32,16),new THREE.MeshBasicMaterial({side:THREE.BackSide,fog:false,map:canvasTex(16,256,(g,w,h)=>{const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#1d8cf8');gr.addColorStop(.35,'#4cc9f0');gr.addColorStop(.48,'#bae6fd');gr.addColorStop(.55,'#fef9c3');gr.addColorStop(1,'#fef9c3');g.fillStyle=gr;g.fillRect(0,0,w,h)})})));
+// พื้นหญ้า
+const grassTex=canvasTex(512,512,(g,w,h)=>{g.fillStyle='#84cc16';g.fillRect(0,0,w,h);for(let i=0;i<26;i++){const x=Math.random()*w,y=Math.random()*h,r=rand(30,90),gr=g.createRadialGradient(x,y,0,x,y,r);const lite=Math.random()<.5;gr.addColorStop(0,lite?'rgba(254,240,138,.25)':'rgba(63,98,18,.18)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(x-r,y-r,r*2,r*2)}for(let i=0;i<1600;i++){const x=Math.random()*w,y=Math.random()*h;g.strokeStyle=Math.random()<.5?'rgba(77,124,15,.55)':'rgba(190,242,100,.5)';g.lineWidth=1.2;g.beginPath();g.moveTo(x,y);g.lineTo(x+rand(-2,2),y-rand(4,9));g.stroke()}},9);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(140,110),M(0xffffff,{map:grassTex,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+[[-30,-45,26],[10,-52,30],[45,-40,22]].forEach(([x,z,r])=>{const h=new THREE.Mesh(new THREE.SphereGeometry(r,32,16),M(0x65a30d,{roughness:1}));h.scale.y=.28;h.position.set(x,-1,z);scene.add(h)});
+// รั้วไม้กลางสนาม
+const woodTex=canvasTex(128,256,(g,w,h)=>{g.fillStyle='#b7793f';g.fillRect(0,0,w,h);for(let i=0;i<30;i++){g.strokeStyle=`rgba(${90+Math.random()*40|0},50,20,.35)`;g.lineWidth=rand(1,3);g.beginPath();const x=Math.random()*w;g.moveTo(x,0);g.bezierCurveTo(x+rand(-8,8),h*.3,x+rand(-8,8),h*.7,x+rand(-5,5),h);g.stroke()}g.fillStyle='#6b6b6b';[[w/2,30],[w/2,h-30]].forEach(([x,y])=>{g.beginPath();g.arc(x,y,5,0,7);g.fill()})});
+const woodM=M(0xffffff,{map:woodTex});
+for(let z=-6.5;z<=5.5;z+=0.78){const p=add(new THREE.Mesh(new THREE.BoxGeometry(0.28,3.9,0.68),woodM),0,1.95,z);const tip=add(new THREE.Mesh(new THREE.ConeGeometry(0.48,0.55,4),woodM),0,4.15,z);tip.rotation.y=Math.PI/4;tip.scale.set(.42,1,1)}
+[1.2,3.1].forEach(y=>add(new THREE.Mesh(new THREE.BoxGeometry(0.22,0.32,12.8),woodM),0.22,y,-0.5));
+const vineM=M(0x2f7d32);
+for(let k=0;k<4;k++){const pts=[];for(let i=0;i<=20;i++){const t=i/20;pts.push(new THREE.Vector3(0.2+Math.sin(t*9+k)*.06,t*3.8,-5.6+k*3.1+Math.sin(t*6+k)*.6))}add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),40,0.05,6),vineM),0,0,0);for(let i=2;i<20;i+=3)add(new THREE.Mesh(new THREE.SphereGeometry(.14,8,6),vineM),pts[i].x+.08,pts[i].y,pts[i].z).scale.set(.5,1,1.3)}
+// เห็ด ดอกไม้ ก้อนหินโคนรั้ว
+[[.9,-3.2],[-.8,2.4],[.9,4.1]].forEach(([x,z])=>{add(new THREE.Mesh(new THREE.CylinderGeometry(.07,.09,.3,8),M(0xfff7ed)),x,.15,z);const cap=add(new THREE.Mesh(new THREE.SphereGeometry(.22,16,8,0,6.3,0,1.6),M(0xdc2626)),x,.3,z);for(let i=0;i<4;i++)add(new THREE.Mesh(new THREE.SphereGeometry(.035,6,4),M(0xffffff)),x+Math.cos(i*1.6)*.13,.42,z+Math.sin(i*1.6)*.13,false)});
+[[-.9,-1.3],[1.0,1.0]].forEach(([x,z])=>{const r=add(new THREE.Mesh(new THREE.DodecahedronGeometry(.35),M(0x9ca3af)),x,.2,z);r.scale.y=.6;add(new THREE.Mesh(new THREE.SphereGeometry(.22,10,6),M(0x4d7c0f)),x,.36,z).scale.set(1.1,.35,1)});
+function flower(x,z,c){add(new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,.4,4),M(0x3f6212)),x,.2,z,false);add(new THREE.Mesh(new THREE.SphereGeometry(.1,8,6),M(c)),x,.42,z,false).scale.y=.5;add(new THREE.Mesh(new THREE.SphereGeometry(.04,6,4),M(0xfacc15)),x,.45,z,false)}
+for(let i=0;i<14;i++)flower(rand(-1.4,1.4)*(Math.random()<.5?1:-1),rand(-6,5.5),[0xffffff,0xa855f7,0xffffff,0xf472b6][i%4]);
+// ต้นไม้
+function tree(x,z,s=1){add(new THREE.Mesh(new THREE.CylinderGeometry(.35*s,.5*s,4*s,8),M(0x7c4a21)),x,2*s,z);const fm=M(0x4d9b1f);[[0,4.6,0,2.2],[1.3,4,0.4,1.6],[-1.2,4.1,-.3,1.7],[0.2,5.6,-.2,1.6]].forEach(([dx,dy,dz,r])=>add(new THREE.Mesh(new THREE.IcosahedronGeometry(r*s,1),fm),x+dx*s,dy*s,z+dz*s))}
+tree(-15,-10,1.15);tree(-22,-16,1.3);tree(17,-14,1.2);tree(26,-20,1.4);tree(-8,-20,1);tree(6,-24,1.1);
+// ป้ายหมู่บ้าน
+const signTex=canvasTex(512,200,(g,w,h)=>{g.fillStyle='#fffcf5';g.fillRect(0,0,w,h);g.strokeStyle='#6B8E23';g.lineWidth=14;g.strokeRect(7,7,w-14,h-14);g.fillStyle='#B84A0B';g.font='700 64px Kanit, sans-serif';g.textAlign='center';g.fillText('หมู่บ้านสุขใจ',w/2,95);g.fillStyle='#1F2A3D';g.font='500 34px Prompt, sans-serif';g.fillText('สถานีสุขภาพชุมชน',w/2,152)});
+add(new THREE.Mesh(new THREE.BoxGeometry(3.4,1.35,.12),[woodM,woodM,woodM,woodM,new THREE.MeshStandardMaterial({map:signTex,roughness:.9}),woodM]),-12.5,3.1,-5.5);
+[-13.9,-11.1].forEach(x=>add(new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,3,6),woodM),x,1.5,-5.6));
+// ฝั่งนิสิต: ม้านั่ง กล่องปฐมพยาบาล กระถางดอกไม้
+add(new THREE.Mesh(new THREE.BoxGeometry(2.6,.18,.8),woodM),-12,0.75,-2.4);[-13.1,-10.9].forEach(x=>add(new THREE.Mesh(new THREE.BoxGeometry(.18,.75,.7),woodM),x,.37,-2.4));
+const kit=add(new THREE.Mesh(new THREE.BoxGeometry(.9,.6,.55),M(0xffffff,{roughness:.5})),-11.6,1.14,-2.4);
+[[.5,.14],[.14,.5]].forEach(([w,h])=>add(new THREE.Mesh(new THREE.BoxGeometry(w,h,.02),M(0x16a34a)),-11.6,1.14,-2.12,false));
+[[-5.6,3.6,0xf472b6],[-12.8,2.6,0xfacc15],[-4.4,-3.6,0xa855f7]].forEach(([x,z,c])=>{add(new THREE.Mesh(new THREE.CylinderGeometry(.35,.26,.5,12),M(0xc2410c)),x,.25,z);for(let i=0;i<5;i++)add(new THREE.Mesh(new THREE.SphereGeometry(.16,8,6),M(c)),x+Math.cos(i*1.3)*.2,.62+Math.random()*.1,z+Math.sin(i*1.3)*.2)});
+// ฝั่งยุงลาย: แหล่งเพาะพันธุ์ ยางรถเก่ามีน้ำขัง โอ่ง กระป๋อง กะลา
+const tireM=M(0x1f1f1f,{roughness:.9}),waterM=M(0x38bdf8,{roughness:.1,metalness:.1,transparent:true,opacity:.85});
+[[12.2,-2.6],[13.4,-1.4],[5.6,3.4]].forEach(([x,z],i)=>{const t=add(new THREE.Mesh(new THREE.TorusGeometry(.55,.24,10,24),tireM),x,.24,z);t.rotation.x=Math.PI/2;add(new THREE.Mesh(new THREE.CircleGeometry(.36,20),waterM),x,.27,z,false).rotation.x=-Math.PI/2});
+const jarPts=[];for(let i=0;i<=12;i++){const t=i/12;jarPts.push(new THREE.Vector2(.35+Math.sin(t*Math.PI)*.55-(t>.85?.12:0),t*1.5))}
+add(new THREE.Mesh(new THREE.LatheGeometry(jarPts,24),M(0x92400e,{roughness:.6})),13.6,0,-4.4);
+add(new THREE.Mesh(new THREE.CircleGeometry(.3,16),waterM),13.6,1.42,-4.4,false).rotation.x=-Math.PI/2;
+[[10.6,2.2],[11.4,3.1]].forEach(([x,z])=>{const c=add(new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.42,12),M(0xcbd5e1,{metalness:.6,roughness:.35})),x,.16,z);c.rotation.z=Math.PI/2;c.rotation.y=rand(0,3)});
+[[4.8,-3.2],[14.6,1.2]].forEach(([x,z])=>{add(new THREE.Mesh(new THREE.SphereGeometry(.3,14,8,0,6.3,Math.PI/2,Math.PI/2),M(0x78350f,{side:THREE.DoubleSide})),x,.3,z);add(new THREE.Mesh(new THREE.CircleGeometry(.26,14),waterM),x,.24,z,false).rotation.x=-Math.PI/2});
+// บ้านไกล
+(function(){const g=new THREE.Group();const wall=new THREE.Mesh(new THREE.BoxGeometry(6,3.6,4.5),M(0xfef3c7));wall.position.y=1.8;g.add(wall);const roof=new THREE.Mesh(new THREE.ConeGeometry(4.6,2.2,4),M(0xfb7185));roof.position.y=4.7;roof.rotation.y=Math.PI/4;roof.scale.z=.8;g.add(roof);[-1.6,1.6].forEach(x=>{const w=new THREE.Mesh(new THREE.BoxGeometry(1,1,.1),M(0x93c5fd,{roughness:.2}));w.position.set(x,2,2.28);g.add(w)});const d=new THREE.Mesh(new THREE.BoxGeometry(.9,1.7,.1),M(0x92400e));d.position.set(0,.85,2.28);g.add(d);g.position.set(13.5,0,-18.5);g.traverse(o=>{o.castShadow=o.receiveShadow=true});scene.add(g)})();
+// เมฆ ละอองเกสร
+const clouds=[];for(let i=0;i<8;i++){const g=new THREE.Group();for(let j=0;j<5;j++){const s=new THREE.Mesh(new THREE.SphereGeometry(rand(1.2,2.2),12,8),new THREE.MeshStandardMaterial({color:0xffffff,roughness:1,emissive:0x8899aa,emissiveIntensity:.25}));s.position.set(j*1.6-3,Math.random()*.8,Math.random()*1.2);g.add(s)}g.position.set(rand(-60,60),rand(17,26),rand(-60,-35));g.userData.v=rand(.6,1.4);scene.add(g);clouds.push(g)}
+const pollenG=new THREE.BufferGeometry(),pp=new Float32Array(90*3);for(let i=0;i<90;i++){pp[i*3]=rand(-20,20);pp[i*3+1]=rand(0,10);pp[i*3+2]=rand(-10,8)}pollenG.setAttribute('position',new THREE.BufferAttribute(pp,3));
+const pollen=new THREE.Points(pollenG,new THREE.PointsMaterial({color:0xfef08a,size:.12,transparent:true,opacity:.85}));scene.add(pollen);
+
+/* ===== กล้อง ===== */
+const cam={theta:0.3,phi:0.2,dist:21.2,target:new THREE.Vector3(0,2.75,0),want:new THREE.Vector3(0,2.75,0)};
+function fitCamera(){const a=innerWidth/innerHeight;cam.dist=a>2?18.8:a>1.6?21.2:a>1.2?23.5:a>0.9?27.5:34;camera.aspect=a;camera.updateProjectionMatrix()}
+function placeCamera(dt){cam.target.lerp(cam.want,1-Math.pow(.02,dt));const{theta,phi,dist}=cam;camera.position.set(cam.target.x+dist*Math.cos(phi)*Math.sin(theta),cam.target.y+dist*Math.sin(phi),cam.target.z+dist*Math.cos(phi)*Math.cos(theta));camera.lookAt(cam.target)}
+let drag=null;
+glc.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,t:cam.theta,p:cam.phi}});
+addEventListener('pointermove',e=>{if(!drag)return;cam.theta=Math.max(-.25,Math.min(.85,drag.t-(e.clientX-drag.x)*.004));cam.phi=Math.max(.08,Math.min(.58,drag.p+(e.clientY-drag.y)*.003))});
+addEventListener('pointerup',()=>drag=null);
+$('btnCam').onclick=()=>{cam.theta=.3;cam.phi=.2};
+
+/* ===== ตัวละคร (sprite sheet วาดบน canvas ซ้อน) ===== */
+const sheets={};
+function loadSprites(){const names=Object.keys(SPR);let done=0;return Promise.all(names.map(n=>new Promise((res,rej)=>{const im=new Image();im.onload=()=>{sheets[n]=im;done++;$('loadMsg').textContent=`กำลังโหลดตัวละคร ${done}/${names.length}`;res()};im.onerror=()=>rej(n);im.src=`duel_${n}.webp`})))}
+const chars={fl:{clip:'idle',t0:0,shake:0,flash:0},mq:{clip:'idle',t0:0,shake:0,flash:0}};
+function play(side,clip,opt={}){const c=chars[side];c.clip=clip;c.t0=performance.now();c.opt=opt;c.relDone=false;c.endDone=false}
+const vtmp=new THREE.Vector3();
+function project(x,y,z){vtmp.set(x,y,z).project(camera);return{x:(vtmp.x+1)/2*innerWidth,y:(1-vtmp.y)/2*innerHeight,z:vtmp.z}}
+function unitPx(x){const a=project(x,0,0),b=project(x,1,0);return Math.hypot(a.x-b.x,a.y-b.y)}
+function updateChar(side,now){const c=chars[side],key=SIDE[side].pre+'_'+c.clip,sp=SPR[key];const el=now-c.t0;let f=Math.floor(el/sp.ms);
+  if(sp.rel!=null&&!c.relDone&&f>=sp.rel){c.relDone=true;c.opt.onRelease&&c.opt.onRelease()}
+  if(sp.loop)f%=sp.n;else{if(f>=sp.n){f=sp.n-1;if(!c.endDone&&el>=sp.n*sp.ms+(sp.hold||0)){c.endDone=true;const cb=c.opt.onEnd;cb?cb():play(side,'idle')}}}
+  return{key,f,sp,el}}
+function drawChar(side,now){const s=SIDE[side],c=chars[side],{key,f,sp,el}=updateChar(side,now);const im=sheets[key];if(!im)return;
+  const p=project(s.x,0,0),u=unitPx(s.x),sc=u/SHEET.unit;let ox=0;
+  if(c.shake>now){const k=(c.shake-now)/450;ox=Math.sin(now*.09)*9*k}
+  fx.save();fx.globalAlpha=.28;fx.fillStyle='#14320a';fx.beginPath();fx.ellipse(p.x,p.y,u*1.05,u*.28,0,0,7);fx.fill();fx.restore();
+  const sx=(f%SHEET.cols)*SHEET.fw,sy=Math.floor(f/SHEET.cols)*SHEET.fh;
+  fx.drawImage(im,sx,sy,SHEET.fw,SHEET.fh,p.x+ox-SHEET.ax*sc,p.y-SHEET.ay*sc,SHEET.fw*sc,SHEET.fh*sc);
+  if(sp.stars&&el<sp.n*sp.ms+(sp.hold||0)+200){const hx=p.x+ox-0.2*u,hy=p.y-2.9*u;for(let i=0;i<5;i++){const a=now*.006+i*1.256;fx.font=`${Math.round(u*.38)}px serif`;fx.textAlign='center';fx.fillText(i%2?'💫':'⭐',hx+Math.cos(a)*u*.85,hy+Math.sin(a)*u*.22)}}
+  if(G&&G.charging===side){const r=Math.max(26,u*.55);drawGauge(p.x,p.y-3.2*u-r-8,u)}}
+function drawGauge(x,y,u){const r=Math.max(26,u*.55),pw=G.power/100;fx.save();fx.lineCap='round';fx.lineWidth=r*.28;fx.strokeStyle='rgba(31,42,61,.35)';fx.beginPath();fx.arc(x,y,r,Math.PI*.8,Math.PI*2.2);fx.stroke();const gr=fx.createLinearGradient(x-r,0,x+r,0);gr.addColorStop(0,'#22c55e');gr.addColorStop(.55,'#facc15');gr.addColorStop(1,'#ef4444');fx.strokeStyle=gr;fx.beginPath();fx.arc(x,y,r,Math.PI*.8,Math.PI*(.8+1.4*pw));fx.stroke();fx.fillStyle='#fff';fx.strokeStyle='#1F2A3D';fx.lineWidth=4;fx.font=`800 ${Math.round(r*.62)}px Kanit, sans-serif`;fx.textAlign='center';fx.textBaseline='middle';fx.strokeText(Math.round(G.power)+'%',x,y+2);fx.fillText(Math.round(G.power)+'%',x,y+2);fx.restore()}
+
+/* ===== ฟิสิกส์ลูกที่ปา ===== */
+const ballGeo=new THREE.SphereGeometry(1,20,14),ballM=M(0xdc2626,{roughness:.45}),sparkGeo=new THREE.OctahedronGeometry(.09),partGeo=new THREE.SphereGeometry(.09,6,4);
+let proj=null;const parts=[];
+function launchVel(side,power){const sp=8.5+(power/100)*20;return{vx:Math.cos(CFG.ANG)*sp*SIDE[side].dir,vy:Math.sin(CFG.ANG)*sp}}
+function startPos(side){const s=SIDE[side];return{x:s.x+s.rel[0],y:s.rel[1]}}
+function stepBall(b,dt,wind){b.x+=b.vx*dt;b.y+=b.vy*dt;b.vy+=CFG.G*dt;b.vx+=wind*CFG.WIND_K*dt}
+function checkBall(b,side,big){const t=SIDE[other(side)],R=big?CFG.BIG_R:CFG.HIT_R,d=Math.hypot(b.x-t.x,b.y-t.hitY);
+  if(d<R)return{type:'hit',d};
+  if(Math.abs(b.x)<CFG.FENCE_T+CFG.BALL_R&&b.y<CFG.FENCE_H)return{type:'fence'};
+  if(b.y<CFG.BALL_R)return{type:'ground'};if(Math.abs(b.x)>32)return{type:'out'};return null}
+function simulate(side,power,wind,big){const v=launchVel(side,power),p=startPos(side),b={x:p.x,y:p.y,vx:v.vx,vy:v.vy};const t=SIDE[other(side)];let minD=1e9,pts=[];
+  for(let i=0;i<1200;i++){stepBall(b,1/120,wind);if(i%4===0)pts.push([b.x,b.y]);minD=Math.min(minD,Math.hypot(b.x-t.x,b.y-t.hitY));const r=checkBall(b,side,big);if(r)return{res:r.type,minD,pts,end:[b.x,b.y]}}return{res:'out',minD,pts}}
+function spawnProjectile(side,power,big){const p=startPos(side),v=launchVel(side,power);const r=big?CFG.BALL_R*1.6:CFG.BALL_R;const m=new THREE.Mesh(ballGeo,ballM);m.scale.setScalar(r);m.castShadow=true;m.position.set(p.x,p.y,0);scene.add(m);
+  proj={side,big,b:{x:p.x,y:p.y,vx:v.vx,vy:v.vy},m,spark:0};SFX.throw()}
+function burst(x,y,color,n=18,speed=6){for(let i=0;i<n;i++){const m=new THREE.Mesh(partGeo,new THREE.MeshBasicMaterial({color,transparent:true}));m.position.set(x,y,0);scene.add(m);parts.push({m,v:new THREE.Vector3(rand(-1,1),rand(.2,1.4),rand(-1,1)).multiplyScalar(speed*rand(.4,1)),life:rand(.5,.9),max:.9})}}
+function updateProjectile(dt){if(!proj)return;const n=Math.ceil(dt*240);for(let i=0;i<n;i++){stepBall(proj.b,dt/n,G.wind);const r=checkBall(proj.b,proj.side,proj.big);if(r){finishProjectile(r.type);return}}
+  proj.m.position.set(proj.b.x,proj.b.y,0);proj.m.rotation.z+=dt*9.4*-SIDE[proj.side].dir;proj.spark+=dt;
+  if(proj.spark>.025){proj.spark=0;const s=new THREE.Mesh(sparkGeo,new THREE.MeshBasicMaterial({color:proj.big?0xfacc15:0xfef08a,transparent:true}));s.position.copy(proj.m.position);scene.add(s);parts.push({m:s,v:new THREE.Vector3(0,.3,0),life:.35,max:.35})}
+  cam.want.set(Math.max(-6,Math.min(6,proj.b.x*.55)),2.75+Math.max(0,proj.b.y-4)*.3,0)}
+function updateParts(dt){for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life-=dt;p.m.position.addScaledVector(p.v,dt);p.v.y-=9*dt;p.m.material.opacity=Math.max(0,p.life/p.max);if(p.life<=0){scene.remove(p.m);p.m.material.dispose();parts.splice(i,1)}}}
+
+/* ===== ข้อความลอย / toast ===== */
+let toastT;function toast(msg,ms=1400,think=false){const t=$('toast');t.textContent=msg;t.classList.toggle('think',think);t.classList.add('show');clearTimeout(toastT);if(ms)toastT=setTimeout(()=>t.classList.remove('show'),ms)}
+function floatText(side,txt,color){const s=SIDE[side],p=project(s.x,3.4,0),d=document.createElement('div');d.className='float';d.textContent=txt;d.style.color=color;d.style.left=p.x+'px';d.style.top=p.y+'px';document.body.appendChild(d);setTimeout(()=>d.remove(),1400)}
+
+/* ===== สถานะเกม ===== */
+let G=null,mode='1p';
+const names=()=>mode==='1p'?{fl:'นิสิตพยาบาล',mq:'ยุงลาย (บอท)'}:{fl:'ทีมดอกไม้',mq:'ทีมยุงลาย'};
+const isHuman=s=>mode==='2p'||s==='fl';
+function buildDeck(){return shuffle(QUESTIONS).map(q=>{const idx=shuffle([0,1,2,3]);return{t:q.t,q:q.q,e:q.e,o:idx.map(i=>q.o[i]),ans:idx.indexOf(0)}})}
+function newGame(){const deck=buildDeck();const fl=deck.slice(0,CFG.TURNS);let mq=deck.slice(CFG.TURNS,CFG.TURNS*2);while(mq.length<CFG.TURNS)mq.push(deck[mq.length%deck.length]);
+  G={turn:'fl',hp:{fl:CFG.HP,mq:CFG.HP},used:{fl:0,mq:0},correct:{fl:0,mq:0},items:{fl:{big:1,dbl:1,heal:1},mq:{big:1,dbl:1,heal:1}},q:{fl,mq},bigNext:false,throwsLeft:0,wind:0,power:0,charging:null,state:'start',over:false,timers:[]};
+  const n=names();$('nameFl').textContent=n.fl;$('nameMq').textContent=n.mq;$('stNameFl').textContent=n.fl;$('stNameMq').textContent=n.mq;
+  play('fl','idle');play('mq','idle');cam.want.set(0,2.75,0);$('hud').style.display='';$('over').classList.remove('show');updateHUD();later(startTurn,500)}
+function later(fn,ms){const g=G;const id=setTimeout(()=>{if(G===g&&!G.over)fn()},ms);G.timers.push(id);return id}
+function clearTimers(){if(G)G.timers.forEach(clearTimeout)}
+function updateHUD(){['fl','mq'].forEach(s=>{const K=s==='fl'?'Fl':'Mq';$('hp'+K).style.width=Math.max(0,G.hp[s])+'%';$('hp'+K+'N').textContent=Math.max(0,G.hp[s]);$('sub'+K).textContent=`คำถาม ${G.used[s]}/${CFG.TURNS}  ตอบถูก ${G.correct[s]}`;$('card'+K).classList.toggle('turn',G.turn===s&&!G.over)});
+  $('turnBadge').textContent=G.over?'จบเกม':`ตาของ${names()[G.turn]}`;const w=G.wind;$('windVal').textContent=Math.abs(w).toFixed(1);$('windArrow').style.transform=`rotate(${w<0?180:0}deg)`;$('windArrow').style.opacity=Math.abs(w)<.3?.3:1;
+  const it=G.items[G.turn];[['itBig','big'],['itDbl','dbl'],['itHeal','heal']].forEach(([id,k])=>{const b=$(id);b.querySelector('b').textContent=it[k];b.disabled=!it[k]||G.state!=='aim';b.classList.toggle('on',k==='big'&&G.bigNext)})}
+function startTurn(){if(G.used.fl>=CFG.TURNS&&G.used.mq>=CFG.TURNS)return endGame();if(G.used[G.turn]>=CFG.TURNS){G.turn=other(G.turn)}
+  G.wind=Math.round(rand(-CFG.WIND_MAX,CFG.WIND_MAX)*10)/10;G.state='turn';cam.want.set(0,2.75,0);updateHUD();
+  toast(`ตาของ${names()[G.turn]}`,1000);later(()=>isHuman(G.turn)?askQuestion():botThink(),1050)}
+function askQuestion(){const s=G.turn,q=G.q[s][G.used[s]];G.used[s]++;G.cur=q;G.state='question';updateHUD();
+  $('qForm').textContent=`แบบเสนอโครงการ ข้อที่ ${G.used[s]} จาก ${CFG.TURNS}`;$('qWho').textContent=`ตาของ${names()[s]}`;$('qTopic').textContent=q.t;$('qText').textContent=q.q;
+  const box=$('qOpts');box.innerHTML='';q.o.forEach((o,i)=>{const b=document.createElement('button');b.className='opt';b.innerHTML=`<span class="L">${'กขคง'[i]}</span><span></span>`;b.lastChild.textContent=o;b.onclick=()=>answer(i);box.appendChild(b)});
+  $('qFeed').className='';$('qModal').classList.add('show');setTimeout(()=>box.firstChild&&box.firstChild.focus({preventScroll:true}),50)}
+function answer(i){if(G.state!=='question')return;G.state='feedback';const s=G.turn,q=G.cur,ok=i===q.ans;if(ok)G.correct[s]++;
+  [...$('qOpts').children].forEach((b,j)=>{b.disabled=true;if(j===q.ans)b.classList.add('right');else if(j===i)b.classList.add('wrong')});
+  const fd=$('qFeed');fd.className='show '+(ok?'good':'bad');$('qFt').textContent=ok?'ถูกต้อง ได้สิทธิ์ปา!':`ยังไม่ใช่ คำตอบคือ ${'กขคง'[q.ans]}`;$('qExp').textContent=q.e;$('qNext').textContent=ok?'ไปปากันเลย':'ไปต่อ';
+  if(ok){SFX.correct()}else{SFX.wrong();play(other(s),'laugh')}G.lastOk=ok;updateHUD();setTimeout(()=>$('qNext').focus({preventScroll:true}),60)}
+$('qNext').onclick=()=>{if(G.state!=='feedback')return;$('qModal').classList.remove('show');if(G.lastOk)beginAim();else{play(other(G.turn),'idle');toast('เสียสิทธิ์ปา',900);later(endTurn,900)}};
+function beginAim(){G.throwsLeft=1;G.state='aim';updateHUD();if(isHuman(G.turn)){$('actionBar').classList.add('show');$('chargeBtn').textContent='กดค้างเพื่อชาร์จ'}else botAim()}
+function useItem(k){if(G.state!=='aim')return;const s=G.turn,it=G.items[s];if(!it[k])return;it[k]--;
+  if(k==='big'){G.bigNext=true;toast('💥 ปาใหญ่! ลูกถัดไปแรงขึ้น',1100)}
+  if(k==='dbl'){G.throwsLeft++;toast('⚡ ได้ปา 2 ลูกในตานี้',1100)}
+  if(k==='heal'){G.hp[s]=Math.min(CFG.HP,G.hp[s]+CFG.HEAL);floatText(s,'+25 HP 💚','#16a34a');SFX.heal();burstAt(s,0x22c55e)}
+  updateHUD()}
+function burstAt(s,c){burst(SIDE[s].x,1.6,c,22,4)}
+$('itBig').onclick=()=>useItem('big');$('itDbl').onclick=()=>useItem('dbl');$('itHeal').onclick=()=>useItem('heal');
+// ชาร์จพลัง
+let chargeDir=1;
+function startCharge(){if(!G||G.state!=='aim'||!isHuman(G.turn))return;SFX.unlock();G.state='charging';G.charging=G.turn;G.power=8;chargeDir=1;$('chargeBtn').classList.add('pressed');$('chargeBtn').textContent='ปล่อยเพื่อปา!';updateHUD()}
+function releaseCharge(){if(!G||G.state!=='charging'||!isHuman(G.turn))return;$('chargeBtn').classList.remove('pressed');doThrow(G.power)}
+$('chargeBtn').addEventListener('pointerdown',e=>{e.preventDefault();startCharge()});
+addEventListener('pointerup',releaseCharge);addEventListener('pointercancel',releaseCharge);
+addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat){if($('qModal').classList.contains('show'))return;e.preventDefault();startCharge()}});
+addEventListener('keyup',e=>{if(e.code==='Space'){e.preventDefault();releaseCharge()}});
+function doThrow(power){const s=G.turn;G.state='throwing';G.charging=null;G.throwsLeft--;const big=G.bigNext;G.bigNext=false;$('actionBar').classList.remove('show');updateHUD();
+  play(s,'throw',{onRelease:()=>spawnProjectile(s,power,big)})}
+function finishProjectile(type){const {side,big,b,m}=proj;scene.remove(m);proj=null;const t=other(side);
+  if(type==='hit'){const dmg=big?CFG.BIG_DMG:CFG.DMG;G.hp[t]=Math.max(0,G.hp[t]-dmg);burst(b.x,b.y,0xdc2626,26,7);burst(b.x,b.y,0xfacc15,12,5);SFX.hit();chars[t].shake=performance.now()+450;play(t,'hit');floatText(t,`-${dmg} HP!`,'#dc2626');toast(big?'💥 โดนเต็มๆ!':'🎯 ปาโดน!',1000)}
+  else{burst(b.x,Math.max(b.y,.3),type==='fence'?0xb7793f:0x84cc16,16,4);SFX.miss();play(t,'laugh');toast(type==='fence'?'ติดรั้ว!':'พลาดเป้า!',1000);later(()=>{if(chars[t].clip==='laugh')play(t,'idle')},1500)}
+  updateHUD();G.state='resolve';
+  later(()=>{cam.want.set(0,2.75,0);if(G.hp[t]<=0)return endGame();if(G.throwsLeft>0){G.state='aim';updateHUD();if(isHuman(G.turn)){$('actionBar').classList.add('show');$('chargeBtn').textContent='ลูกที่ 2 กดค้างเพื่อชาร์จ'}else botAim(true)}else endTurn()},1700)}
+function endTurn(){G.turn=other(G.turn);startTurn()}
+// บอท
+function botThink(){G.state='bot';toast('🦟 ยุงลายกำลังคิดคำตอบ...',0,true);
+  later(()=>{const ok=Math.random()<CFG.BOT_ACC;G.used.mq++;if(ok)G.correct.mq++;updateHUD();
+    if(ok){SFX.correct();toast('ยุงลายตอบถูก! เตรียมปา',1100);later(beginAim,1100)}
+    else{SFX.wrong();toast('ยุงลายตอบผิด! เสียสิทธิ์ปา',1300);play('fl','laugh');later(()=>{play('fl','idle');endTurn()},1700)}},CFG.BOT_THINK)}
+function botAim(second){const s='mq',it=G.items[s];let delay=600;
+  if(!second){if(G.hp[s]<=55&&it.heal){useItem('heal');delay=1100}
+    later(()=>{if(it.big&&Math.random()<.38)useItem('big');else if(it.dbl&&Math.random()<.28)useItem('dbl');later(()=>botCharge(),700)},delay)}
+  else later(()=>botCharge(),500)}
+function botCharge(){let best=null;for(let p=25;p<=96;p+=.5){const r=simulate('mq',p,G.wind,G.bigNext);const sc=(r.res==='hit'?0:100)+r.minD;if(!best||sc<best.sc)best={p,sc}}
+  const target=Math.max(8,Math.min(100,best.p+rand(-CFG.BOT_ERR,CFG.BOT_ERR)));G.state='charging';G.charging='mq';G.power=8;G.botTarget=target}
+// จบเกม
+function endGame(){if(G.over)return;G.over=true;G.state='over';clearTimers();$('actionBar').classList.remove('show');$('qModal').classList.remove('show');$('toast').classList.remove('show');G.charging=null;
+  let win=null;if(G.hp.fl<=0)win='mq';else if(G.hp.mq<=0)win='fl';else if(G.hp.fl!==G.hp.mq)win=G.hp.fl>G.hp.mq?'fl':'mq';
+  if(win){play(win,'laugh');play(other(win),'hit')}updateHUD();
+  const n=names();$('trophy').textContent=win==='fl'?'🏆':win==='mq'?'🦟':'🤝';
+  $('overTitle').textContent=win?`${n[win]} ชนะ!`:'เสมอกัน!';
+  const acc=s=>G.used[s]?Math.round(G.correct[s]/G.used[s]*100):0;
+  $('stFl').textContent=`${G.correct.fl}/${G.used.fl}`;$('stMq').textContent=`${G.correct.mq}/${G.used.mq}`;$('stFlP').textContent=`ความแม่นยำ ${acc('fl')}%`;$('stMqP').textContent=`ความแม่นยำ ${acc('mq')}%`;
+  const a=acc('fl'),st=a>=90?3:a>=70?2:a>=50?1:0;
+  $('stars').innerHTML=mode==='1p'?[0,1,2].map(i=>`<span class="${i<st?'':'off'}">⭐</span>`).join(''):'';
+  $('stars').title=`ดาวคิดจากการตอบถูก: 90% ขึ้นไป 3 ดาว 70% ขึ้นไป 2 ดาว 50% ขึ้นไป 1 ดาว`;
+  if(win==='fl'||mode==='2p')SFX.win();
+  setTimeout(()=>$('over').classList.add('show'),1300)}
+function toMenu(){clearTimers();if(G){G.over=true}if(proj){scene.remove(proj.m);proj=null}G=null;$('hud').style.display='none';$('actionBar').classList.remove('show');$('qModal').classList.remove('show');$('over').classList.remove('show');$('toast').classList.remove('show');play('fl','idle');play('mq','idle');$('start').classList.add('show')}
+$('btnMenu').onclick=toMenu;$('btnHome').onclick=toMenu;$('btnAgain').onclick=()=>{clearTimers();newGame()};
+$('btnSound').onclick=()=>{$('btnSound').textContent=SFX.toggle()?'🔊':'🔇'};
+document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{document.querySelectorAll('.mode').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');mode=b.dataset.mode});
+$('btnStart').onclick=()=>{SFX.unlock();$('start').classList.remove('show');newGame()};
+addEventListener('keydown',e=>{if(e.key==='Enter'&&G&&G.state==='feedback'){e.preventDefault();$('qNext').click()}});
+
+/* ===== วงรอบหลัก ===== */
+function resize(){const d=Math.min(devicePixelRatio,2);renderer.setSize(innerWidth,innerHeight,false);fxc.width=innerWidth*d;fxc.height=innerHeight*d;fx.setTransform(d,0,0,d,0,0);fitCamera()}
+addEventListener('resize',resize);resize();
+let last=performance.now();
+function frame(now){const dtRaw=Math.min(.1,(now-last)/1000),dt=Math.min(.05,dtRaw);last=now;
+  clouds.forEach(c=>{c.position.x+=c.userData.v*dt;if(c.position.x>70)c.position.x=-70});
+  const pa=pollen.geometry.attributes.position;for(let i=0;i<90;i++){let y=pa.getY(i)+dt*.25;if(y>10)y=0;pa.setY(i,y);pa.setX(i,pa.getX(i)+Math.sin(now*.0005+i)*dt*.2)}pa.needsUpdate=true;
+  if(G&&G.charging){if(isHuman(G.charging)){G.power+=chargeDir*CFG.CHARGE*dt;if(G.power>=100){G.power=100;chargeDir=-1}if(G.power<=8){G.power=8;chargeDir=1}}
+    else{G.power=Math.min(G.botTarget,G.power+CFG.CHARGE*dt);if(G.power>=G.botTarget&&G.state==='charging'){G.state='botfire';later(()=>doThrow(G.botTarget),220)}}}
+  if(G&&!G.over)updateProjectile(dtRaw);updateParts(dt);placeCamera(dt);renderer.render(scene,camera);
+  fx.clearRect(0,0,innerWidth,innerHeight);
+  if(G&&G.charging&&isHuman(G.charging)&&G.state==='charging'){const r=simulate(G.charging,G.power,G.wind,G.bigNext);fx.fillStyle='#fff';fx.strokeStyle='rgba(31,42,61,.7)';fx.lineWidth=2;const lim=Math.floor(r.pts.length*.4);for(let i=2;i<lim;i+=2){const p=project(r.pts[i][0],r.pts[i][1],0),k=1-i/lim;fx.globalAlpha=.4+.6*k;fx.beginPath();fx.arc(p.x,p.y,3+2*k,0,7);fx.fill();fx.stroke()}fx.globalAlpha=1;}
+  drawChar('fl',now);drawChar('mq',now);
+  requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+
+loadSprites().then(()=>{$('btnStart').disabled=false;$('loadMsg').textContent='พร้อมเล่น'}).catch(n=>{$('loadMsg').textContent=`โหลดภาพตัวละครไม่ได้ (duel_${n}.webp) ตรวจว่าไฟล์ภาพอยู่โฟลเดอร์เดียวกับเกม`});
+
+/* ใช้ทดสอบอัตโนมัติเท่านั้น */
+window.__T={get G(){return G},answerRight(){answer(G.cur.ans)},answerWrong(){answer((G.cur.ans+1)%4)},next(){$('qNext').click()},throwAt(p){if(G.state==='aim'){G.state='charging';G.charging=G.turn;G.power=p;doThrow(p)}},best(side){let b=null;for(let p=25;p<=96;p+=.5){const r=simulate(side,p,G.wind,G.bigNext);const sc=(r.res==='hit'?0:100)+r.minD;if(!b||sc<b.sc)b={p,sc,res:r.res}}return b}};
+</script>
+</body>
+</html>
