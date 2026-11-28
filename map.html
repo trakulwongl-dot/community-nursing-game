@@ -96,8 +96,7 @@ const N=[
  {c:2,t:"ศึกวินิจฉัย วิ่งหนีแมลง",w:"เดี่ยว",m:"ch2-diag",href:"diagrun.html",d:"พามาสคอตวิ่งหนียุง แมลงสาบ หนู เก็บจุดข้อวินิจฉัยให้ครบ 4 ข้อ คนถึงเป้าหมายก่อนและถูกครบได้โบนัสแต้มเกมกับมงกุฎ"},
  {c:2,t:"ศึกประชาคม จัดลำดับปัญหา",w:"เดี่ยว",m:"ch2-rank",href:"rank.html",d:"ให้คะแนนปัญหาตามเกณฑ์ 4 ข้อ (ขนาด ความรุนแรง ความยากง่าย ความตระหนักของชุมชน) รวมด้วยวิธีบวกและคูณ แล้วจัดอันดับว่าปัญหาไหนควรแก้ก่อน ผ่านด่านทีละรอบ"},
  {c:2,t:"วิเคราะห์และนำเสนอข้อมูล",w:"ทีม",d:"นำข้อมูลที่เก็บมาใส่ Dummy table วิเคราะห์ แล้วนำเสนอข้อมูลชุมชนของกลุ่ม ครูเป็นผู้ให้คะแนน",teacher:1},
- {c:3,t:"ตรวจวัตถุประสงค์โครงการ",w:"เดี่ยว",d:"ตรวจว่าวัตถุประสงค์โครงการเขียนถูกหลักหรือไม่ และแก้ให้ถูก"},
- {c:3,t:"ตรวจเกณฑ์การประเมินผล",w:"เดี่ยว",d:"จับคู่วัตถุประสงค์กับเกณฑ์ประเมินผลที่สอดคล้องกัน"},
+ {c:3,t:"ศึกปาข้ามรั้ว เขียนโครงการ",w:"เดี่ยว",m:"ch3-duel",href:"duel.html",d:"ตอบโจทย์การเขียนโครงการ ทั้งวัตถุประสงค์ ตัวชี้วัด และการประเมินผล ตอบถูกจึงได้สิทธิ์ปาลูกบอลข้ามรั้วใส่ยุงลาย ดาวคิดจากข้อที่ตอบถูก แต้มเกมสะสมนับ 3 รอบแรกและรวมเข้าคะแนนทีม"},
  {c:4,t:"คำนวณค่าประสิทธิผล",w:"เดี่ยว",m:"ch4-calc",href:"quiz.html?m=ch4-calc",d:"ฝึกคำนวณค่าประสิทธิผลของโครงการจากโจทย์ ระบบตรวจคำตอบอัตโนมัติ"},
  {c:4,t:"แยกประเภทการประเมิน",w:"เดี่ยว",m:"ch4-type",href:"quiz.html?m=ch4-type",d:"จำแนกประเภทการประเมินผลจากสถานการณ์ที่กำหนด"},
  {c:5,t:"วิเคราะห์การใช้ยา",w:"เดี่ยว",d:"วิเคราะห์สถานการณ์การใช้ยาไม่สมเหตุผลในชุมชน"},
@@ -181,7 +180,7 @@ function pick(i,quiet){sel=i;draw();const n=N[i],s=stateOf(n),el=$("detail");el.
     if(s!=="lock"&&!(w&&w.stars>=0)){const f=document.createElement("div");f.innerHTML='<button class="btn" type="button" id="lkbtn">กลุ่มทำเสร็จแล้ว แจ้งอาจารย์ตรวจ</button><p class="note" id="lkmsg" hidden></p>';el.appendChild(f);$("lkbtn").onclick=sendLink}
   }
   else if(n.m==="ch2-collect"&&ME&&ME.hh){const h=ME.hh;add("p",`กลุ่มของคุณเก็บได้ ${h.count} หลัง จากโควตา ${h.quota} หลัง (${h.members} คน × 3)`+(h.bonus?` · เกินโควตา ได้โบนัส +${h.bonus}`:h.met?" · ครบโควตาแล้ว":""),"note");if(COLLECT_URL){const w=document.createElement("div"),a=document.createElement("a");a.className="btn";a.href=COLLECT_URL;a.target="_blank";a.rel="noopener";a.textContent="เปิดแอปเก็บข้อมูลครัวเรือน";w.appendChild(a);el.appendChild(w)}add("p","จำนวนหลังอัปเดตภายในประมาณ 1 นาทีหลังบันทึก แล้วเปิดหน้านี้ใหม่","note")}
-  else if(n.href&&(s==="live"||s==="done")){const q=ME&&ME.m[n.m];if(q)add("p",`ดาวที่ดีที่สุด ${"★".repeat(q.best)}${"☆".repeat(3-q.best)} · ส่งแล้ว ${q.attempts} ครั้ง`,"note");const w=document.createElement("div"),a=document.createElement("a");a.className="btn";a.href=n.href;a.textContent=q?"ทำอีกครั้ง":"เริ่มภารกิจ";w.appendChild(a);el.appendChild(w)}
+  else if(n.href&&(s==="live"||s==="done")){const q=ME&&ME.m[n.m];if(q)add("p",`ดาวที่ดีที่สุด ${"★".repeat(q.best)}${"☆".repeat(3-q.best)} · ส่งแล้ว ${q.attempts} ครั้ง`,"note");if(n.m==="ch3-duel"&&ME&&ME.duel)add("p",`แต้มเกมสะสม ${ME.duel.total} แต้ม · นับแล้ว ${Math.min(ME.duel.counted,ME.duel.max)}/${ME.duel.max} รอบ (รวมเข้าคะแนนทีม)`,"note");const w=document.createElement("div"),a=document.createElement("a");a.className="btn";a.href=n.href;a.textContent=q?"ทำอีกครั้ง":"เริ่มภารกิจ";w.appendChild(a);el.appendChild(w)}
   else if(s==="live")add("p","ครูเปิดป้ายนี้แล้ว ทำภารกิจตามที่ครูบอกในชั่วโมงเรียน","note");
 }
 function grpDraw(){
@@ -221,7 +220,7 @@ async function loadOpen(){try{const r=await fetch(SHEET_URL,{redirect:"follow"})
 async function doLogin(raw){const sid=(raw||"").replace(/[^0-9A-Za-z]/g,""),m=$("lmsg");m.hidden=true;if(sid.length<5){m.textContent="กรุณากรอกรหัสนิสิต";m.hidden=false;return}
   try{const j=await postJ({action:"login",sid});
     if(!j.ok)throw new Error(j.error||"fail");
-    const s=j.saved||{};ME={sid,name:j.name||"",group:j.group||"",gr:j.groups||null,att:j.att||null,hh:j.hh||null,lv:Math.min(4,s.lv||0),st:(s.stars||[]).reduce((a,b)=>a+(b||0),0),m:j.missions||{},gw:j.gw||null};
+    const s=j.saved||{};ME={sid,name:j.name||"",group:j.group||"",gr:j.groups||null,att:j.att||null,hh:j.hh||null,lv:Math.min(4,s.lv||0),st:(s.stars||[]).reduce((a,b)=>a+(b||0),0),m:j.missions||{},gw:j.gw||null,duel:j.duel||null};
     try{sessionStorage.setItem("cn-sid",sid);localStorage.setItem("chn1-sid",sid)}catch(x){}
     $("login").hidden=true;grpDraw();const cur=current();sel=cur<0?0:cur;draw();pick(sel,true);part();walk();
   }catch(x){m.textContent=x.message==="not_in_roster"?"ไม่พบรหัสนิสิตนี้ในรายชื่อรายวิชา ตรวจรหัสอีกครั้งหรือแจ้งอาจารย์":"เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง";m.hidden=false}}
